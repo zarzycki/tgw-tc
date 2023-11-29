@@ -33,12 +33,15 @@ def process_trajectory_files(file_list, n_vars, header_str, is_unstructured, mas
         'xmonth': 20, 'xday': 21, 'xhour': 22
     }
 
+    iterate = 0
+
     for file in file_list:
         nstorms, ntimes, ncol, traj_data = getTrajectories(file, n_vars, header_str, is_unstructured)
 
         # Note, this correctly masks all NaNs and flattens the array to 1-D
-        if file == 'final.Historical':
+        if iterate == 0:
             slpmask = (traj_data[4,:,:] > mask_min_slp) & (traj_data[4,:,:] <= mask_max_slp)
+
         for key, index in index_mapping.items():
             data_collection[key].append(traj_data[index,:,:][slpmask])
 
@@ -46,6 +49,8 @@ def process_trajectory_files(file_list, n_vars, header_str, is_unstructured, mas
         #for key, index in index_mapping.items():
         #    print(traj_data[index,:,:].shape)
         #    data_collection[key].append(traj_data[index,:,:])
+
+        iterate = iterate + 1
 
     return data_collection
 
@@ -183,12 +188,13 @@ def plot_histograms(processed_data, key, title, units, legend_names):
     plt.show()
 
 #--------------------------------------------------------------------------------------------------------
+
 traj_files = [
-    'final.Historical',
-    'final.cold_near',
-    'final.hot_near',
-    'final.cold_far',
-    'final.hot_far'
+    './trajs/final.Historical',
+    './trajs/final.cold_near',
+    './trajs/final.hot_near',
+    './trajs/final.cold_far',
+    './trajs/final.hot_far'
 ]
 
 traj_files_legend = ['Historical', 'Cold Near', 'Hot Near', 'Cold Far', 'Hot Far']
@@ -213,6 +219,7 @@ if mask_max_slp < 0:
 
 processed_data = process_trajectory_files(traj_files, nVars, headerStr, isUnstruc, mask_min_slp, mask_max_slp)
 
+###
 
 # A diagnostic to ensure the length of each loaded dataset is the same
 for key in processed_data:

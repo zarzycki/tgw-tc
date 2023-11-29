@@ -175,7 +175,7 @@ xgt10_prect = conform_to_reference_2d(xwind, GT10_PRECT)
 
 # Write file
 write_cyclone_tracks(
-    'final.'+experiment,
+    'trajs/final.'+experiment,
     xix, xjy, xlat, xlon, xyear, xmonth, xday, xhour,
     xpres=(xpres,'.6e'),  # Specify the format for each optional column
     #xlt1000_slp= (xlt1000_slp, '.0f'),
