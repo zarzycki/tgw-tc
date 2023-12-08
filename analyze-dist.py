@@ -257,6 +257,27 @@ print(n_rapid_deepening)
 print("Rapid collapsing counts")
 print(n_rapid_collapsing)
 
+## Plot rapid deepening + collapsing
+
+index = np.arange(num_files) # Creating an index for each pair
+
+bar_width = 0.35
+
+plt.figure(figsize=(10, 6))
+bar1 = plt.bar(index, n_rapid_deepening, bar_width, color='b', label='Rapid Deepening')
+bar2 = plt.bar(index + bar_width, n_rapid_collapsing, bar_width, color='r', label='Rapid Collapsing')
+
+plt.xlabel('Configuration')
+plt.ylabel('Number of occurances')
+plt.title('Rapid Deepening and Collapsing Occurances')
+plt.xticks(index + bar_width / 2, traj_files_legend)
+
+plt.legend()
+
+plt.tight_layout()
+plt.show()
+
+##
 
 # Keys for which to calculate and print statistics
 keys_for_statistics = ['xpres', 'xslp', 'xwind', 'xmax_wind10', 'xrmw', 'xmax_prect', 'xgt10_prect', 'xmax_tmq']
