@@ -226,12 +226,11 @@ for key in processed_data:
     lengths = [len(dataset) for dataset in processed_data[key]]
     print(f"Lengths of datasets for key '{key}': {lengths}")
 
-apply_conversion_to_key(processed_data, 'xrmw', 111.1)
-
 # All values greater than 999/9 will be set to nans
 apply_nan_filter_to_keys(processed_data, 'xdpsl', 999)
 apply_nan_filter_to_keys(processed_data, 'xwind', 9999)
 apply_nan_filter_to_keys(processed_data, 'xpres', 9999)
+apply_nan_filter_to_keys(processed_data, 'xike', 1.0e+15)
 
 # If any timestep has *any* nan across the datasets, set all of the datasets to nan
 # This happens with wind in the TE data because TE may "catch" the missing data at the edge of the domain
@@ -239,7 +238,11 @@ apply_nan_filter_to_keys(processed_data, 'xpres', 9999)
 synchronize_and_diagnose_nans(processed_data, 'xdpsl')
 synchronize_and_diagnose_nans(processed_data, 'xwind')
 synchronize_and_diagnose_nans(processed_data, 'xpres')
+synchronize_and_diagnose_nans(processed_data, 'xike')
 
+apply_conversion_to_key(processed_data, 'xrmw', 111.1)
+apply_conversion_to_key(processed_data, 'xr8', 111.1)
+apply_conversion_to_key(processed_data, 'xike', 1e-9)
 
 n_rapid_deepening = []
 n_rapid_collapsing = []
@@ -280,7 +283,9 @@ plt.show()
 ##
 
 # Keys for which to calculate and print statistics
-keys_for_statistics = ['xpres', 'xslp', 'xwind', 'xmax_wind10', 'xrmw', 'xmax_prect', 'xgt10_prect', 'xmax_tmq']
+# TPZ answers
+#keys_for_statistics = ['xpres', 'xslp', 'xwind', 'xmax_wind10', 'xrmw', 'xmax_prect', 'xgt10_prect', 'xmax_tmq']
+keys_for_statistics = ['xpres','xwind','xrmw', 'xurmw', 'xr8', 'xike', 'xmax_prect', 'xgt10_prect', 'xmax_tmq', 'xslp', 'xmax_wind10', 'xmax_wind850', 'xgt8_wind10', 'xgt10_wind850']
 
 # Calculate and print statistics for each list
 calculate_and_print_statistics(processed_data, keys_for_statistics)
