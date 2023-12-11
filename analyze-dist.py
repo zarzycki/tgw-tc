@@ -4,6 +4,7 @@ import xarray as xr
 from scipy import stats
 import matplotlib.pyplot as plt
 import csv
+import os
 
 sys.path.insert(0, './functions')
 from getTrajectories import *
@@ -178,7 +179,7 @@ def snapshot_percent_increase(processed_data, list_names):
 
     return results
 
-def plot_histograms(processed_data, key, title, units, legend_names):
+def plot_histograms(processed_data, key, title, units, legend_names, save_figs):
     data_list = processed_data[key]
 
     # Find the overall minimum and maximum values across all datasets
@@ -197,12 +198,59 @@ def plot_histograms(processed_data, key, title, units, legend_names):
 
     # Customize the plot
     plt.title(f'{title} distributions')
-    plt.xlabel(f'{title} ({units})')  # Include units in the x-axis label
+    plt.xlabel(f'{title} ({units})')
     plt.ylabel('Frequency')
     plt.legend()
 
-    # Show the plot
-    plt.show()
+    if save_figs:
+        figs_dir = "figs"
+        os.makedirs(figs_dir, exist_ok=True)  # Create the directory if it doesn't exist
+        filename = os.path.join(figs_dir, f"{key}_distribution.png")
+        plt.savefig(filename)
+        plt.close()
+    else:
+        plt.show()
+
+def plot_histograms_with_control_deviation(processed_data, key, title, units, legend_names, save_figs):
+    data_list = processed_data[key]
+    control_data = data_list[0].flatten()  # Control dataset
+
+    # Determine the overall minimum and maximum deviation values across all datasets
+    deviations = [data.flatten() - control_data for data in data_list[1:]]  # Skip the first (control)
+    overall_min = min(np.nanmin(dev) for dev in deviations)
+    overall_max = max(np.nanmax(dev) for dev in deviations)
+
+    # Determine bin width and create bin edges with 0 centered
+    num_bins = 25
+    bin_width = max(abs(overall_max), abs(overall_min)) / (num_bins / 2)
+    bin_edges = np.arange(-bin_width * (num_bins / 2), bin_width * (num_bins / 2) + bin_width, bin_width)
+
+    # Set up the figure and axes for deviation histograms
+    plt.figure(figsize=(10, 6))
+
+    # Loop over each deviation dataset and plot a histogram
+    for i, deviation_data in enumerate(deviations):
+        counts, _ = np.histogram(deviation_data, bins=bin_edges, density=True)
+        plt.step(bin_edges[:-1], counts, where='post', label=legend_names[i+1] if i+1 < len(legend_names) else f'Dataset {i+2}', linewidth=2)
+
+    # Add a dashed vertical line at 0 for reference
+    plt.axvline(x=0, color='gray', linestyle='--')
+
+    # Customize the plot
+    plt.title(f'Deviation from Historical: {title} distributions')
+    plt.xlabel(f'Deviation in {title} ({units})')
+    plt.ylabel('Density')
+    plt.legend()
+
+    if save_figs:
+        figs_dir = "figs"
+        os.makedirs(figs_dir, exist_ok=True)  # Create the directory if it doesn't exist
+        filename = os.path.join(figs_dir, f"{key}_deviation_from_control.png")
+        plt.savefig(filename)
+        plt.close()
+    else:
+        plt.show()
+
 
 #--------------------------------------------------------------------------------------------------------
 
@@ -222,6 +270,7 @@ isUnstruc=False
 nVars=-1
 headerStr='start'
 wind_factor=1.0
+save_figs=True
 
 mask_min_slp=float(get_arg(1))
 mask_max_slp=float(get_arg(2))
@@ -326,5 +375,6 @@ plot_params = [
 ]
 
 for key, title, units in plot_params:
-    plot_histograms(processed_data, key, title, units, traj_files_legend)
+    plot_histograms(processed_data, key, title, units, traj_files_legend, save_figs)
+    plot_histograms_with_control_deviation(processed_data, key, title, units, traj_files_legend, save_figs)
 
