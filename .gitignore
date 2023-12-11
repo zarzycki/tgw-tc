@@ -1,3 +1,5 @@
+*.csv
+figs/
 __pycache__
 final*
 netcdf

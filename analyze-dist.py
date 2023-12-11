@@ -343,8 +343,14 @@ plt.xticks(index + bar_width / 2, traj_files_legend)
 
 plt.legend()
 
-plt.tight_layout()
-plt.show()
+if save_figs:
+    figs_dir = "figs"
+    os.makedirs(figs_dir, exist_ok=True)  # Create the directory if it doesn't exist
+    filename = os.path.join(figs_dir, "rapid_deepening_collapsing.png")
+    plt.savefig(filename)
+    plt.close()  # Close the plot to free up memory
+else:
+    plt.show()
 
 ##
 
