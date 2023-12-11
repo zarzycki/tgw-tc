@@ -3,6 +3,7 @@ import numpy as np
 import xarray as xr
 from scipy import stats
 import matplotlib.pyplot as plt
+import csv
 
 sys.path.insert(0, './functions')
 from getTrajectories import *
@@ -97,6 +98,8 @@ def synchronize_and_diagnose_nans(processed_data, key):
         #    print(f"Dataset {i+1} for '{key}' - No NaNs added.")
 
 def calculate_and_print_statistics(processed_data, list_names):
+    results = []
+
     for list_name in list_names:
         data_list = processed_data[list_name]
 
@@ -111,27 +114,41 @@ def calculate_and_print_statistics(processed_data, list_names):
             # Filter out NaNs
             filtered_data = flattened_data[~np.isnan(flattened_data)]
 
-            # Calculate mean, percentiles, and median while ignoring NaNs
+            # Calculate statistics
             mean_value = np.nanmean(filtered_data)
             percentile_5th = np.nanpercentile(filtered_data, 5)
             percentile_95th = np.nanpercentile(filtered_data, 95)
             median_value = np.nanmedian(filtered_data)
+            data_range = np.nan if filtered_data.size == 0 else np.nanmax(filtered_data) - np.nanmin(filtered_data)
+            t_stat, p_val = (np.nan, np.nan) if i == 0 else stats.ttest_ind(control_data, filtered_data, nan_policy='omit', equal_var=False)
 
-            # Calculate range
-            if filtered_data.size > 0:  # Check if there are non-NaN values
-                data_range = np.nanmax(filtered_data) - np.nanmin(filtered_data)
-            else:
-                data_range = np.nan  # Set range as NaN if all values are NaN
+            # Store results
+            result = {
+                'Variable': list_name,
+                'Dataset': i,
+                'Mean': mean_value,
+                '5th Percentile': percentile_5th,
+                '95th Percentile': percentile_95th,
+                'Median': median_value,
+                'Range': data_range,
+                'T-Statistic': t_stat,
+                'P-value': p_val
+            }
+            results.append(result)
 
-            # Print the results, rounded to 1 decimal place
+            # Print the results
             print(f"{list_name} {i}: Mean = {mean_value:.1f}, 5th Percentile = {percentile_5th:.1f}, 95th Percentile = {percentile_95th:.1f}, Median = {median_value:.1f}, Range = {data_range:.1f}")
-
-            # Perform t-test with the control data, if i is not 0
             if i != 0:
-                t_stat, p_val = stats.ttest_ind(control_data, filtered_data, nan_policy='omit', equal_var=False)
                 print(f"    T-Statistic = {t_stat:.3f}, P-value = {p_val:.3f}")
 
-        print("---")
+    # Write results to a CSV file
+    with open('statistics_output.csv', 'w', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=results[0].keys())
+        writer.writeheader()
+        for data in results:
+            writer.writerow(data)
+
+    print("Statistics written to statistics_output.csv")
 
 def snapshot_percent_increase(processed_data, list_names):
     results = {}
