@@ -5,6 +5,9 @@ from scipy import stats
 import matplotlib.pyplot as plt
 import csv
 import os
+import seaborn as sns
+import pandas as pd
+from seaborn import diverging_palette
 
 sys.path.insert(0, './functions')
 from getTrajectories import *
@@ -362,14 +365,61 @@ keys_for_statistics = ['xpres','xwind','xrmw', 'xurmw', 'xr8', 'xike', 'xmax_pre
 # Calculate and print statistics for each list
 calculate_and_print_statistics(processed_data, keys_for_statistics)
 
+####
 
-keys_for_percentages = ['xpres','xwind','xrmw', 'xurmw', 'xr8', 'xike', 'xmax_prect', 'xgt10_prect', 'xmax_tmq', 'xslp', 'xmax_wind10', 'xmax_wind850', 'xgt8_wind10', 'xgt10_wind850']
+pretty_labels = {
+    'xpres': 'Pressure',
+    'xwind': 'Wind Speed',
+    'xrmw': 'Radius of Maximum Wind',
+    'xurmw': 'Upper-Level Radius of Maximum Wind',
+    'xr8': 'R8 Radius',
+    'xike': 'Storm IKE',
+    'xmax_prect': 'Max. Precip. Rate',
+    'xgt10_prect': 'Area Precip. > 10 mm/hr',
+    'xmax_tmq': 'Max. TPW',
+    'xslp': 'Sea Level Pressure',
+    'xmax_wind10': 'Max. 10-m Wind Speed',
+    'xmax_wind850': 'Max. 850 hPa Wind Speed',
+    'xgt8_wind10': 'Area 10-m Wind > 8 m/s',
+    'xgt10_wind850': 'Area 850 hPa Wind > 10 m/s'
+}
+
+keys_for_percentages = ['xmax_tmq', 'xmax_prect', 'xgt10_prect', 'xslp', 'xmax_wind10', 'xike', 'xgt10_wind850']
 
 percentages_results = snapshot_percent_increase(processed_data, keys_for_percentages)
 
 for key, percentages in percentages_results.items():
     print(f"Percentages for {key}:", percentages)
 
+# Now, convert this dictionary into a DataFrame suitable for a heatmap
+df = pd.DataFrame(percentages_results, index=['Cold Near', 'Hot Near', 'Cold Far', 'Hot Far']).transpose()
+
+# Rename the index of the DataFrame to pretty labels
+df.rename(index=pretty_labels, inplace=True)
+
+# Create a custom colormap with white in the middle
+cmap = diverging_palette(240, 10, sep=20, as_cmap=True)
+
+# Create the heatmap
+plt.figure(figsize=(8, 10))
+heatmap = sns.heatmap(df, annot=True, fmt="d", linewidths=.5, cmap=cmap, center=50, vmin=0, vmax=100)
+
+# Customize the plot
+heatmap.set_title('Snapshot percentage increased')
+#plt.xlabel('Scenario')
+#plt.ylabel('Variable')
+
+# Save or display the plot based on save_figs
+if save_figs:
+    figs_dir = "figs"
+    os.makedirs(figs_dir, exist_ok=True)  # Create the directory if it doesn't exist
+    plt.tight_layout()  # Adjust the padding between and around subplots.
+    plt.savefig(os.path.join(figs_dir, "heatmap.png"), bbox_inches='tight')  # Save the figure, ensuring nothing is cut off
+    plt.close()
+else:
+    plt.show()
+
+####
 
 plot_params = [
     ('xmax_tmq', 'Maximum precipitable water', 'mm'),
