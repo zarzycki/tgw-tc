@@ -384,7 +384,7 @@ pretty_labels = {
     'xgt10_wind850': 'Area 850 hPa Wind > 10 m/s'
 }
 
-keys_for_percentages = ['xmax_tmq', 'xmax_prect', 'xgt10_prect', 'xslp', 'xmax_wind10', 'xike', 'xgt10_wind850']
+keys_for_percentages = ['xmax_tmq', 'xslp', 'xmax_wind10', 'xike', 'xmax_prect', 'xgt10_prect', 'xgt10_wind850']
 
 percentages_results = snapshot_percent_increase(processed_data, keys_for_percentages)
 
