@@ -309,6 +309,9 @@ synchronize_and_diagnose_nans(processed_data, 'xwind')
 synchronize_and_diagnose_nans(processed_data, 'xpres')
 synchronize_and_diagnose_nans(processed_data, 'xike')
 
+# Add new variable for variance of psl
+processed_data['xvarpsl'] = [np.abs(data) for data in processed_data['xdpsl']]
+
 apply_conversion_to_key(processed_data, 'xrmw', 111.1)
 apply_conversion_to_key(processed_data, 'xr8', 111.1)
 apply_conversion_to_key(processed_data, 'xike', 1e-9)
@@ -360,7 +363,7 @@ else:
 # Keys for which to calculate and print statistics
 # TPZ answers
 #keys_for_statistics = ['xpres', 'xslp', 'xwind', 'xmax_wind10', 'xrmw', 'xmax_prect', 'xgt10_prect', 'xmax_tmq']
-keys_for_statistics = ['xpres','xwind','xrmw', 'xurmw', 'xr8', 'xike', 'xmax_prect', 'xgt10_prect', 'xmax_tmq', 'xslp', 'xmax_wind10', 'xmax_wind850', 'xgt8_wind10', 'xgt10_wind850']
+keys_for_statistics = ['xpres','xwind','xrmw', 'xurmw', 'xr8', 'xike', 'xmax_prect', 'xgt10_prect', 'xmax_tmq', 'xslp', 'xmax_wind10', 'xmax_wind850', 'xgt8_wind10', 'xgt10_wind850', 'xvarpsl']
 
 # Calculate and print statistics for each list
 calculate_and_print_statistics(processed_data, keys_for_statistics)
