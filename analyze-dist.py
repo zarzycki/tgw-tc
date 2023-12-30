@@ -141,7 +141,7 @@ def calculate_and_print_statistics(processed_data, list_names):
             results.append(result)
 
             # Print the results
-            print(f"{list_name} {i}: Mean = {mean_value:.1f}, 5th Percentile = {percentile_5th:.1f}, 95th Percentile = {percentile_95th:.1f}, Median = {median_value:.1f}, Range = {data_range:.1f}")
+            print(f"{list_name} {i}: Mean = {mean_value:.2f}, 5th Percentile = {percentile_5th:.2f}, 95th Percentile = {percentile_95th:.2f}, Median = {median_value:.2f}, Range = {data_range:.2f}")
             if i != 0:
                 print(f"    T-Statistic = {t_stat:.3f}, P-value = {p_val:.3f}")
 
