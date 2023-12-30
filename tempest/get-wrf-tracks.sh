@@ -15,25 +15,19 @@ module load gcc/8.3.1
 module load openmpi/3.1.6
 module load netcdf/4.4.1
 
-############ USER OPTIONS #####################
+######################## USER OPTIONS #######################################
 
 ## Unique string (useful for processing multiple data sets in same folder
 UQSTR=CONUS_TGW_WRF_SSP585_HOT_FAR
 
-## Path to TempestExtremes binaries (I will maintain this)
+## Path to TempestExtremes binaries
 TEMPESTEXTREMESDIR=/storage/home/cmz5202/sw/tempestextremes/
 
 ### Where do we want to write files?
 SCRATCHDIR=~/scratch/tempest/tgw/
 
-### Where is the WRF data located
+### Where is the "aux" WRF data located
 AUXDIR=/gpfs/group/cmz5202/default/tpz5135/TGW/${UQSTR}/aux/
-
-### What is the name of the IBTrACS reference file we are trying to match?
-FILTNODE="2059_2100_ibtracs"
-
-### What is the filename of the WRF tracks matched with IBTrACS?
-TRAJFILENAME=trajectories.txt.${UQSTR}
 
 #DN and SN settings
 DCU_MERGEDIST=4.0
@@ -43,7 +37,21 @@ SN_TRAJMAXGAP="12h"
 SN_MINWIND=1.0
 SN_MINLEN=2
 
-######
+##############################################################################
+
+### What is the name of the IBTrACS reference file we are trying to match?
+if [[ $UQSTR == *"_FAR"* ]]; then
+  FILTNODE="2059_2100_ibtracs"
+elif [[ $UQSTR == *"_NEAR"* ]]; then
+  FILTNODE="2019_2060_ibtracs"
+else
+  FILTNODE="1979_2020_ibtracs"
+fi
+echo "Based on $UQSTR, we are using $FILTNODE IBTrACS trajectories"
+
+### What is the filename of the WRF tracks matched with IBTrACS?
+TRAJFILENAME=trajectories.txt.${UQSTR}
+
 # Get start time
 starttime=$(date -u +"%s")
 

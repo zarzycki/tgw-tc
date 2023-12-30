@@ -11,17 +11,19 @@ set -e
 ### Navigate to my script directly
 cd /storage/home/${LOGNAME}/tempest-scripts/tgw/
 
-### Load required modules
+### Load required modules if needed
 module purge
 module load gcc/8.3.1
 module load openmpi/3.1.6
 module load netcdf/4.4.1
+
+## Where is NCL located?
 NCLBIN=/storage/work/cmz5202/sw/miniconda3/bin/
 
-############ USER OPTIONS #####################
+## Number of CPUs, should match batch settings
+NCPU=80
 
-### This is useful if you are running on a Macbook, where this command is "gsed"
-THISSED="sed"
+############ USER OPTIONS #####################
 
 ## Unique string (useful for processing multiple data sets in same folder
 UQSTR=CONUS_TGW_WRF_Historical
@@ -64,14 +66,15 @@ do
   echo "${PATHTOFILES}/${just_filename}_filtered.nc" >> filt_output_files.txt
 done
 
+## What is the name of the final script we want to create?
 FINALTRAJ=${TRAJFILENAME}_final
 
+## This code adds dPSL to the track files using TRAJFILENAME (from get-wrf-tracks) and FINALTRAJ (traj needed for the composite code)
 echo "Appending any other diags"
 $NCLBIN/ncl append-stats.ncl 'thefile="'${TRAJFILENAME}'"' 'filename="'${FINALTRAJ}'"'
 
 ## First, we want to take the trajectory file, take the WRF files, and mask off grid cells *beyond* 5deg of a TC center point defined by the trajectory.
 echo "extracting TC precip using a set radius of 3 GCD"
-NCPU=80
 mpirun --np ${NCPU} --hostfile $PBS_NODEFILE ${TEMPESTEXTREMESDIR}/bin/NodeFileFilter --in_nodefile ${TRAJFILENAME} --in_fmt "lon,lat,slp,wind" --in_data_list "aux_file_list.txt" --out_data_list "filt_output_files.txt" --bydist 5.0 --var "IVTE,IVTN,T200,SLP,U10,V10,OLR" --preserve "XLAT,XLONG" --regional --fillvalue "-9999999.9" --maskvar "mask" --latname "XLAT" --lonname "XLONG"
 rm -fv log0*.txt
 
@@ -90,11 +93,12 @@ ${TEMPESTEXTREMESDIR}/bin/NodeFileCompose --in_nodefile ${TRAJFILENAME} --in_fmt
 ${TEMPESTEXTREMESDIR}/bin/NodeFileCompose --in_nodefile ${TRAJFILENAME} --in_fmt "lon,lat,slp,wind" --in_data_list aux2_file_list.txt --missingdata --var "TMQ,U850,V850" --regional --max_time_delta "2h" --out_data "${PATHTOFILES}/new_composite1_aux2_${UQSTR}.nc" --dx 0.1 --resx 100 --op "mean" --latname "XLAT" --lonname "XLONG" --snapshots
 ${TEMPESTEXTREMESDIR}/bin/NodeFileCompose --in_nodefile ${TRAJFILENAME} --in_fmt "lon,lat,slp,wind" --in_data_list aux3_file_list.txt --missingdata --var "PRECT" --regional --max_time_delta "2h" --out_data "{PATHTOFILES}/new_composite_aux3_${UQSTR}.nc" --dx 0.1 --resx 100 --op "mean" --latname "XLAT" --lonname "XLONG" --snapshots
 
-##
-echo "Calculating diagnostics with NFE"
+## Add rmw, wind@rmw, r8, ike to tempest files
+echo "Calculating additional derived diagnostics with NFE"
 ${TEMPESTEXTREMESDIR}/bin/NodeFileEditor --in_data_list aux_file_list.txt  --in_nodefile ${FINALTRAJ}      --in_fmt "lon,lat,slp,wind,dps"                           --out_nodefile tmp1.${randomstr} --regional --latname "XLAT" --lonname "XLONG" --calculate "rprof=radial_wind_profile(U10,V10,50,0.1);r_max_az_wind=lastwhere(rprof,=,max);max_az_wind=value(rprof,r_max_az_wind)"   --out_fmt "lon,lat,slp,wind,dps,max_az_wind,r_max_az_wind"
 ${TEMPESTEXTREMESDIR}/bin/NodeFileEditor --in_data_list aux2_file_list.txt --in_nodefile tmp1.${randomstr} --in_fmt "lon,lat,slp,wind,dps,max_az_wind,r_max_az_wind" --out_nodefile tmp2.${randomstr}  --regional --latname "XLAT" --lonname "XLONG" --calculate "rprof=radial_wind_profile(U850,V850,40,0.25);r8=lastwhere(rprof,>=,8.0);ike=eval_ike(U850,V850,5.0)"                    --out_fmt "lon,lat,slp,wind,dps,max_az_wind,r_max_az_wind,r8,ike"
 
+## Overwrite intermediate ASCII tempest tracks with FINALTRAJ to be used in analysis code
 mv -v tmp2.${randomstr} ${FINALTRAJ}
 
 echo "Cleaning up!"
