@@ -1,4 +1,4 @@
-load "/storage/home/cmz5202/sw/cymep/ncl/functions/getTrajectoriesGeneric.ncl"
+load "./ncl_funcs/getTrajectoriesGeneric.ncl"
 
 begin
 
