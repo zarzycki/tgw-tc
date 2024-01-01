@@ -1,3 +1,6 @@
+timing.txt
+tempest.par.*
+tempest/trajectories.txt.*
 tempest/cleaned/*_final
 *.csv
 figs/
