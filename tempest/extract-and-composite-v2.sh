@@ -1,27 +1,25 @@
 #!/bin/bash -l
 
-#PBS -l nodes=4:ppn=20
-#PBS -l walltime=23:00:00
-#PBS -A cmz5202_a_g_sc_default
+##=======================================================================
+#PBS -N tempest.par
+#PBS -A P93300642
+#PBS -l walltime=04:00:00
+#PBS -q main
 #PBS -j oe
-#PBS -N TE.extract
+#PBS -l select=1:ncpus=16:mpiprocs=16
+################################################################
 
 set -e
 
 ### Navigate to my script directly
-cd /storage/home/${LOGNAME}/tempest-scripts/tgw/
-
-### Load required modules if needed
-module purge
-module load gcc/8.3.1
-module load openmpi/3.1.6
-module load netcdf/4.4.1
+cd /glade/u/home/$LOGNAME/sw/tgw-tc/tempest
 
 ## Where is NCL located?
-NCLBIN=/storage/work/cmz5202/sw/miniconda3/bin/
+NCLBIN=/glade/u/apps/derecho/23.06/spack/opt/spack/ncl/6.6.2/gcc/7.5.0/q5mj/bin/
 
-## Number of CPUs, should match batch settings
-NCPU=80
+MPICOMMAND="mpiexec"
+#NCPU=16
+#MPICOMMAND="mpirun --np ${NCPU} --hostfile $PBS_NODEFILE"
 
 ############ USER OPTIONS #####################
 
@@ -29,21 +27,27 @@ NCPU=80
 UQSTR=CONUS_TGW_WRF_Historical
 
 ## Path to TempestExtremes binaries (I will maintain this)
-TEMPESTEXTREMESDIR=/storage/home/cmz5202/sw/tempestextremes/
+TEMPESTEXTREMESDIR=/glade/u/home/zarzycki/work/derecho/tempestextremes/
 
 ### Where do we want to write files?
-PATHTOFILES=/storage/home/tpz5135/tempest-scripts/tgw/
+PATHTOFILES=/glade/derecho/scratch/zarzycki/tempest/tgw/
 
 ### Where is the WRF data located
-AUXDIR=/gpfs/group/cmz5202/default/tpz5135/TGW/${UQSTR}/aux/
-AUX2DIR=/gpfs/group/cmz5202/default/tpz5135/TGW/${UQSTR}/aux2/
-AUX3DIR=/gpfs/group/cmz5202/default/tpz5135/TGW/${UQSTR}/PRECT_6h/
+TGWDIR=/glade/derecho/scratch/zarzycki/TGW
+AUXDIR=${TGWDIR}/${UQSTR}/aux/
+AUX2DIR=${TGWDIR}/${UQSTR}/aux2/
+AUX3DIR=${TGWDIR}/${UQSTR}/PRECT_6h/
+
 ### What is the traj file from the WRF runs?
-TRAJFILENAME=traj.Historical_time_cleaned.txt
+TRAJFILENAME=./cleaned/traj.Historical_time_cleaned.txt
+
+#######################################################################################
 
 # Get start time
 starttime=$(date -u +"%s")
 randomstr=$(date +%s%N)
+
+mkdir -pv $PATHTOFILES
 
 ### Clean up if needed
 rm -fv aux_file_list.txt
@@ -75,7 +79,7 @@ $NCLBIN/ncl append-stats.ncl 'thefile="'${TRAJFILENAME}'"' 'filename="'${FINALTR
 
 ## First, we want to take the trajectory file, take the WRF files, and mask off grid cells *beyond* 5deg of a TC center point defined by the trajectory.
 echo "extracting TC precip using a set radius of 3 GCD"
-mpirun --np ${NCPU} --hostfile $PBS_NODEFILE ${TEMPESTEXTREMESDIR}/bin/NodeFileFilter --in_nodefile ${TRAJFILENAME} --in_fmt "lon,lat,slp,wind" --in_data_list "aux_file_list.txt" --out_data_list "filt_output_files.txt" --bydist 5.0 --var "IVTE,IVTN,T200,SLP,U10,V10,OLR" --preserve "XLAT,XLONG" --regional --fillvalue "-9999999.9" --maskvar "mask" --latname "XLAT" --lonname "XLONG"
+$MPICOMMAND ${TEMPESTEXTREMESDIR}/bin/NodeFileFilter --in_nodefile ${TRAJFILENAME} --in_fmt "lon,lat,slp,wind" --in_data_list "aux_file_list.txt" --out_data_list "filt_output_files.txt" --bydist 5.0 --var "IVTE,IVTN,T200,SLP,U10,V10,OLR" --preserve "XLAT,XLONG" --regional --fillvalue "-9999999.9" --maskvar "mask" --latname "XLAT" --lonname "XLONG"
 rm -fv log0*.txt
 
 ## Here is an example of taking the trajectory file and getting a subfile out that *only* includes TCs with SLP < 965mb
