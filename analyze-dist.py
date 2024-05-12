@@ -174,6 +174,9 @@ def snapshot_percent_increase(processed_data, list_names):
                 count_greater = np.sum(current_data > reference)
                 # Calculate the percentage
                 percentage = (count_greater / len(reference)) * 100
+                # Flip xpres ordering for sanity (lower pressure means "increase")
+                if list_name == "xslp" or list_name == "xpres":
+                    percentage = 100 - percentage
                 percentages.append(percentage)
             else:
                 percentages.append(np.nan)  # Append NaN if sizes are different
@@ -378,16 +381,16 @@ pretty_labels = {
     'xr8': 'R8 Radius',
     'xike': 'Storm IKE',
     'xmax_prect': 'Max. Precip. Rate',
-    'xgt10_prect': 'Area Precip. > 10 mm/hr',
+    'xgt10_prect': 'Area Precip. >10 mm/hr',
     'xmax_tmq': 'Max. TPW',
-    'xslp': 'Sea Level Pressure',
-    'xmax_wind10': 'Max. 10-m Wind Speed',
-    'xmax_wind850': 'Max. 850 hPa Wind Speed',
-    'xgt8_wind10': 'Area 10-m Wind > 8 m/s',
-    'xgt10_wind850': 'Area 850 hPa Wind > 10 m/s'
+    'xslp': 'Min. SLP',
+    'xmax_wind10': 'Max. 10m Wind Speed',
+    'xmax_wind850': 'Max. 850hPa Wind Speed',
+    'xgt8_wind10': 'Area 10m Wind >8 m/s',
+    'xgt10_wind850': 'Area 850hPa Wind >10 m/s'
 }
 
-keys_for_percentages = ['xmax_tmq', 'xslp', 'xmax_wind10', 'xike', 'xmax_prect', 'xgt10_prect', 'xgt10_wind850']
+keys_for_percentages = ['xmax_wind10', 'xslp', 'xmax_tmq', 'xmax_prect', 'xgt10_prect', 'xike', 'xgt10_wind850']
 
 percentages_results = snapshot_percent_increase(processed_data, keys_for_percentages)
 
@@ -401,16 +404,24 @@ df = pd.DataFrame(percentages_results, index=['Cold Near', 'Hot Near', 'Cold Far
 df.rename(index=pretty_labels, inplace=True)
 
 # Create a custom colormap with white in the middle
-cmap = diverging_palette(240, 10, sep=20, as_cmap=True)
+cmap = diverging_palette(240, 10, s=210, l=20, sep=20, as_cmap=True)
 
 # Create the heatmap
 plt.figure(figsize=(8, 10))
-heatmap = sns.heatmap(df, annot=True, fmt="d", linewidths=.5, cmap=cmap, center=50, vmin=0, vmax=100)
+heatmap = sns.heatmap(df, annot=True, fmt="d", linewidths=.5, cmap=cmap, center=50, vmin=0, vmax=100, annot_kws={"size": 24})
 
 # Customize the plot
-heatmap.set_title('Snapshot percentage increased')
-#plt.xlabel('Scenario')
-#plt.ylabel('Variable')
+#heatmap.set_title('Snapshot Percentage Increased', fontsize=18)
+#heatmap.set_xlabel('Scenario', fontsize=16)
+#heatmap.set_ylabel('Variable', fontsize=16)
+
+# Set the size of the tick labels
+heatmap.tick_params(axis='x', labelsize=12)
+heatmap.tick_params(axis='y', labelsize=14)
+
+# Adjust colorbar label size
+cbar = heatmap.collections[0].colorbar
+cbar.ax.tick_params(labelsize=18)
 
 # Save or display the plot based on save_figs
 if save_figs:
