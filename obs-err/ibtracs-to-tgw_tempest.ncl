@@ -2,8 +2,6 @@ load "/Users/cmz5202/Software/cymep/ncl/functions/getTrajectoriesGeneric.ncl"
 
 begin
 
-print("hi")
-
 gridfile="/Users/cmz5202/NetCDF/topo_files/ERA5.topo.nc"
 is_grid_2D=False
 flip_grid_180=True
@@ -21,7 +19,7 @@ ibfilename="IBTrACS.ALL.v04r00.nc"
 ibversion="v4"
 
 TIMETHRESH=0.15
-filename="./traj.ibtracs.txt_final"
+filename="../trajs/traj.ibtracs.txt_final"
 
 
 
@@ -30,7 +28,7 @@ filename="./traj.ibtracs.txt_final"
 
 
 
-tgwfile="traj.Historical_time_cleaned.txt_final"
+tgwfile="../trajs/traj.Historical_time_cleaned.txt_final"
 
 ncols := -1 ; number of columns in non-header rows of trajectory file
 maxLines := -1  ; set to -1 for auto-detection
@@ -110,25 +108,14 @@ print("Starting index: "+stix+"     end index: "+enix)
 delete(ibyear)
 ;=============================================================================
 
-if (ibversion .eq. "v3") then
-  iblat = ibfile->lat_wmo(stix:enix,:)*.01
-  iblon = ibfile->lon_wmo(stix:enix,:)*.01
-  ibtype = toint(ibfile->nature_wmo(stix:enix,:))
-  ibwind_ = ibfile->wind_wmo(stix:enix,:)*.1/ms_to_kts
-  ibpres = ibfile->pres_wmo(stix:enix,:)
-  ibtime = ibfile->time_wmo(stix:enix,:)
-  ibnamechar = ibfile->name(stix:enix,:)
-  ibbasin = tostring(ibfile->basin(stix:enix,:))
-else
-  iblat = ibfile->lat(stix:enix,:)
-  iblon = ibfile->lon(stix:enix,:)
-  ibtype = tostring(ibfile->nature(stix:enix,:,:))
-  ibwind_ = ibfile->wmo_wind(stix:enix,:)/ms_to_kts
-  ibpres = ibfile->wmo_pres(stix:enix,:)*100.
-  ibtime = ibfile->time(stix:enix,:)
-  ibnamechar = ibfile->name(stix:enix,:)
-  ibbasin = tostring(ibfile->basin(stix:enix,:,:))
-end if
+iblat = ibfile->lat(stix:enix,:)
+iblon = ibfile->lon(stix:enix,:)
+ibtype = tostring(ibfile->nature(stix:enix,:,:))
+ibwind_ = ibfile->wmo_wind(stix:enix,:)/ms_to_kts
+ibpres = ibfile->wmo_pres(stix:enix,:)
+ibtime = ibfile->time(stix:enix,:)
+ibnamechar = ibfile->name(stix:enix,:)
+ibbasin = tostring(ibfile->basin(stix:enix,:,:))
 
 if (flip_grid_180) then
   iblon=where(iblon.lt.0,iblon+360.,iblon)

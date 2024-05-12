@@ -2,6 +2,7 @@
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+import numpy as np
 import sys
 
 if len(sys.argv) < 2:
@@ -11,6 +12,9 @@ if len(sys.argv) < 2:
 filename = sys.argv[1]  # Get the filename from command line arguments
 
 data = pd.read_csv(filename)
+
+# Replace values <= -9000 with NaN
+data[data <= -9000] = np.nan
 
 stats = {
     'Mean': data.mean(),
@@ -32,7 +36,7 @@ sns.set(style="whitegrid")
 plt.figure(figsize=(10, 6))
 for column in data.columns:
     #sns.kdeplot(data[column], label=column, fill=True, common_norm=False, alpha=0.4)
-    sns.kdeplot(data[column], bw_adjust=0.7, label=column, fill=True, common_norm=False, alpha=0.4)
+    sns.kdeplot(data[column], bw_adjust=0.9, label=column, fill=True, common_norm=False, alpha=0.2)
 
 # Adding labels and title
 plt.xlabel('Value')
