@@ -219,7 +219,7 @@ def plot_histograms(processed_data, key, title, units, legend_names, save_figs):
         figs_dir = "figs"
         os.makedirs(figs_dir, exist_ok=True)  # Create the directory if it doesn't exist
         filename = os.path.join(figs_dir, f"{key}_distribution.png")
-        plt.savefig(filename)
+        plt.savefig(filename, bbox_inches='tight')
         plt.close()
     else:
         plt.show()
@@ -259,7 +259,7 @@ def plot_histograms_with_control_deviation(processed_data, key, title, units, le
         figs_dir = "figs"
         os.makedirs(figs_dir, exist_ok=True)  # Create the directory if it doesn't exist
         filename = os.path.join(figs_dir, f"{key}_deviation_from_control.png")
-        plt.savefig(filename)
+        plt.savefig(filename, bbox_inches='tight')
         plt.close()
     else:
         plt.show()
@@ -319,8 +319,19 @@ synchronize_and_diagnose_nans(processed_data, 'xwind')
 synchronize_and_diagnose_nans(processed_data, 'xpres')
 synchronize_and_diagnose_nans(processed_data, 'xike')
 
-# Add new variable for variance of psl
+# Add new variable for variation of psl (abs dpsl)
 processed_data['xvarpsl'] = [np.abs(data) for data in processed_data['xdpsl']]
+
+# Add random white noise to 'xrmw' since it's very discretized
+# noise_level is in units of degrees and as randomly distributed around 0.
+# we can think of this as adding observational uncertainty
+noise_level = 0.1
+for i in range(len(processed_data['xrmw'])):
+    noise = np.random.uniform(low=-noise_level, high=noise_level, size=processed_data['xrmw'][i].shape)
+    processed_data['xrmw'][i] += noise
+for i in range(len(processed_data['xr8'])):
+    noise = np.random.uniform(low=-noise_level, high=noise_level, size=processed_data['xr8'][i].shape)
+    processed_data['xr8'][i] += noise
 
 apply_conversion_to_key(processed_data, 'xrmw', 111.1)
 apply_conversion_to_key(processed_data, 'xr8', 111.1)
@@ -404,8 +415,8 @@ for i, data in enumerate(processed_data['xdpsl']):
     figs_dir = "figs"
     os.makedirs(figs_dir, exist_ok=True)
     filename_safe = traj_files_legend[i].replace(' ', '_')  # Replace spaces with underscores
-    filename = os.path.join(figs_dir, f"rapid_events_{filename_safe}.png")
-    plt.savefig(filename)
+    filename = os.path.join(figs_dir, f"map_ri_events_{filename_safe}.png")
+    plt.savefig(filename, bbox_inches='tight')
     plt.close()
 
 # Print the results
@@ -443,7 +454,7 @@ if save_figs:
     figs_dir = "figs"
     os.makedirs(figs_dir, exist_ok=True)  # Create the directory if it doesn't exist
     filename = os.path.join(figs_dir, "rapid_deepening_collapsing.png")
-    plt.savefig(filename)
+    plt.savefig(filename, bbox_inches='tight')
     plt.close()  # Close the plot to free up memory
 else:
     plt.show()
@@ -463,8 +474,8 @@ calculate_and_print_statistics(processed_data, keys_for_statistics, traj_files_l
 pretty_labels = {
     'xpres': 'Pressure',
     'xwind': 'Wind Speed',
-    'xrmw': 'Radius of Maximum Wind',
-    'xurmw': 'Upper-Level Radius of Maximum Wind',
+    'xrmw': 'Radius of Max. Wind',
+    'xurmw': 'Wind at Radius of Max. Wind',
     'xr8': 'R8 Radius',
     'xike': 'Storm IKE',
     'xmax_prect': 'Max. Precip. Rate',
@@ -474,10 +485,18 @@ pretty_labels = {
     'xmax_wind10': 'Max. 10m Wind Speed',
     'xmax_wind850': 'Max. 850hPa Wind Speed',
     'xgt8_wind10': 'Area 10m Wind >8 m/s',
-    'xgt10_wind850': 'Area 850hPa Wind >10 m/s'
+    'xgt10_wind850': 'Area 850hPa Wind >10 m/s',
+    'xvarpsl': '6h dPSL Magnitude'
 }
 
-keys_for_percentages = ['xmax_wind10', 'xslp', 'xmax_tmq', 'xmax_prect', 'xgt10_prect', 'xike', 'xgt10_wind850']
+x_labels_with_newlines = {
+    'Cold Near': 'Cold\nNear',
+    'Hot Near': 'Hot\nNear',
+    'Cold Far': 'Cold\nFar',
+    'Hot Far': 'Hot\nFar'
+}
+
+keys_for_percentages = ['xmax_wind10', 'xslp', 'xmax_tmq', 'xmax_prect', 'xgt10_prect', 'xike', 'xr8', 'xrmw', 'xvarpsl']
 
 percentages_results = snapshot_percent_increase(processed_data, keys_for_percentages)
 
@@ -489,6 +508,9 @@ df = pd.DataFrame(percentages_results, index=['Cold Near', 'Hot Near', 'Cold Far
 
 # Rename the index of the DataFrame to pretty labels
 df.rename(index=pretty_labels, inplace=True)
+
+# Update the columns with new labels that include newlines
+df.columns = [x_labels_with_newlines[col] for col in df.columns]
 
 # Create a custom colormap with white in the middle
 cmap = diverging_palette(240, 10, s=210, l=20, sep=20, as_cmap=True)
@@ -503,8 +525,8 @@ heatmap = sns.heatmap(df, annot=True, fmt="d", linewidths=.5, cmap=cmap, center=
 #heatmap.set_ylabel('Variable', fontsize=16)
 
 # Set the size of the tick labels
-heatmap.tick_params(axis='x', labelsize=12)
-heatmap.tick_params(axis='y', labelsize=14)
+heatmap.tick_params(axis='x', labelsize=16)
+heatmap.tick_params(axis='y', labelsize=16)
 
 # Adjust colorbar label size
 cbar = heatmap.collections[0].colorbar
@@ -528,7 +550,10 @@ plot_params = [
     ('xmax_wind850', 'Maximum 850 hPa wind speed', 'm/s'),
     ('xrmw', 'Radius of Maximum Wind', 'km'),
     ('xgt10_prect', 'Area of precipitation rates greater than 10', 'square km'),
-    ('xgt10_wind850', 'Area of 850mb winds greater than 10 m/s', 'square km')
+    ('xgt10_wind850', 'Area of 850mb winds greater than 10 m/s', 'square km'),
+    ('xr8', 'Radius of 8 m/s wind', 'km'),
+    ('xvarpsl', 'Magnitude of 6-hourly PSL change', 'hPa/6hr'),
+    ('xslp', 'Minimum sea level pressure', 'hPa')
 ]
 
 for key, title, units in plot_params:
