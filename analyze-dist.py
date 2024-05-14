@@ -3,11 +3,18 @@ import numpy as np
 import xarray as xr
 from scipy import stats
 import matplotlib.pyplot as plt
+import matplotlib.lines as mlines
 import csv
 import os
 import seaborn as sns
 import pandas as pd
 from seaborn import diverging_palette
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
+import cartopy.io.shapereader as shpreader
+from shapely.geometry import Point
+from shapely.prepared import prep
+from shapely.ops import unary_union
 
 sys.path.insert(0, './functions')
 from getTrajectories import *
@@ -101,7 +108,7 @@ def synchronize_and_diagnose_nans(processed_data, key):
         #else:
         #    print(f"Dataset {i+1} for '{key}' - No NaNs added.")
 
-def calculate_and_print_statistics(processed_data, list_names):
+def calculate_and_print_statistics(processed_data, list_names, case_names):
     results = []
 
     for list_name in list_names:
@@ -129,7 +136,7 @@ def calculate_and_print_statistics(processed_data, list_names):
             # Store results
             result = {
                 'Variable': list_name,
-                'Dataset': i,
+                'Dataset': case_names[i],
                 'Mean': mean_value,
                 '5th Percentile': percentile_5th,
                 '95th Percentile': percentile_95th,
@@ -141,7 +148,7 @@ def calculate_and_print_statistics(processed_data, list_names):
             results.append(result)
 
             # Print the results
-            print(f"{list_name} {i}: Mean = {mean_value:.2f}, 5th Percentile = {percentile_5th:.2f}, 95th Percentile = {percentile_95th:.2f}, Median = {median_value:.2f}, Range = {data_range:.2f}")
+            print(f"{list_name} {case_names[i]}: Mean = {mean_value:.2f}, 5th Percentile = {percentile_5th:.2f}, 95th Percentile = {percentile_95th:.2f}, Median = {median_value:.2f}, Range = {data_range:.2f}")
             if i != 0:
                 print(f"    T-Statistic = {t_stat:.3f}, P-value = {p_val:.3f}")
 
@@ -323,17 +330,97 @@ n_rapid_deepening = []
 n_rapid_collapsing = []
 thresh_rapid_deepening = -10
 thresh_rapid_collapsing = 10
+deepening_lat_lon = []
+collapsing_lat_lon = []
 
-for data in processed_data['xdpsl']:
-    count_deepening = np.sum(data <= thresh_rapid_deepening)
-    count_collapsing = np.sum(data >= thresh_rapid_collapsing)
+# Create panel labels
+panel_labels = ['a.', 'b.', 'c.', 'd.', 'e.']
+
+# Load natural earth features for land/sea masking
+land_shp_fname = shpreader.natural_earth(resolution='110m', category='physical', name='land')
+land_geom = list(shpreader.Reader(land_shp_fname).geometries())
+land_geom_united = unary_union(land_geom)
+land_geom_prepared = prep(land_geom_united)
+
+for i, data in enumerate(processed_data['xdpsl']):
+    # Find the indices where the pres either goes up/down by threshold
+    deepening_indices = np.where(data <= thresh_rapid_deepening)
+    collapsing_indices = np.where(data >= thresh_rapid_collapsing)
+
+    count_deepening = len(deepening_indices[0])
+    count_collapsing = len(collapsing_indices[0])
+
     n_rapid_deepening.append(count_deepening)
     n_rapid_collapsing.append(count_collapsing)
 
-print("Rapid deepening counts")
+    # Extract latitude and longitude points
+    deepening_lat_lon.append(list(zip(processed_data['xlat'][i][deepening_indices], processed_data['xlon'][i][deepening_indices])))
+    collapsing_lat_lon.append(list(zip(processed_data['xlat'][i][collapsing_indices], processed_data['xlon'][i][collapsing_indices])))
+
+    fig, ax = plt.subplots(figsize=(10, 6), subplot_kw={'projection': ccrs.PlateCarree()})
+    ax.set_extent([-130, -60, 20, 55], crs=ccrs.PlateCarree())  # Zoom in on CONUS
+
+    ax.coastlines()
+    ax.add_feature(cfeature.BORDERS)
+    ax.add_feature(cfeature.LAND)
+    ax.add_feature(cfeature.OCEAN)
+
+    # Add gridlines with labels
+    gl = ax.gridlines(draw_labels=True, color='gray', alpha=0.5, linestyle='--')
+    gl.top_labels = False
+    gl.right_labels = False
+
+    # Plot rapid intensification points
+    if deepening_lat_lon[i]:
+        for lat, lon in deepening_lat_lon[i]:
+            point = Point(lon, lat)
+            if land_geom_prepared.contains(point):
+                ax.plot(lon, lat, 'bo', markerfacecolor='none', markersize=5, label='RI over land')
+            else:
+                ax.plot(lon, lat, 'bo', markersize=5, label='RI over ocean')
+
+    # Plot rapid weakening points
+    if collapsing_lat_lon[i]:
+        for lat, lon in collapsing_lat_lon[i]:
+            point = Point(lon, lat)
+            if land_geom_prepared.contains(point):
+                ax.plot(lon, lat, 'ro', markerfacecolor='none', markersize=5, label='RW over land')
+            else:
+                ax.plot(lon, lat, 'ro', markersize=5, label='RW over ocean')
+
+    ax.set_title(f'Rapid Intensification and Weakening Occurrences - {traj_files_legend[i]}', fontsize=16)
+
+    # Add panel labels
+    ax.text(0.02, 0.96, panel_labels[i], transform=ax.transAxes, fontsize=20, fontweight='bold',
+            va='top', ha='left', bbox=dict(facecolor='white', edgecolor='black', boxstyle='round,pad=0.2'))
+
+    # Custom legend entries
+    ri_ocean = mlines.Line2D([], [], color='blue', marker='o', markersize=5, linestyle='None', label='RI over ocean')
+    ri_land = mlines.Line2D([], [], color='blue', marker='o', markersize=5, markerfacecolor='none', linestyle='None', label='RI over land')
+    rw_ocean = mlines.Line2D([], [], color='red', marker='o', markersize=5, linestyle='None', label='RW over ocean')
+    rw_land = mlines.Line2D([], [], color='red', marker='o', markersize=5, markerfacecolor='none', linestyle='None', label='RW over land')
+    ax.legend(handles=[ri_ocean, ri_land, rw_ocean, rw_land], fontsize=12, loc='upper right', framealpha=0.9)
+
+    figs_dir = "figs"
+    os.makedirs(figs_dir, exist_ok=True)
+    filename_safe = traj_files_legend[i].replace(' ', '_')  # Replace spaces with underscores
+    filename = os.path.join(figs_dir, f"rapid_events_{filename_safe}.png")
+    plt.savefig(filename)
+    plt.close()
+
+# Print the results
+print("Rapid intensification counts")
 print(n_rapid_deepening)
 print("Rapid collapsing counts")
 print(n_rapid_collapsing)
+
+print("Latitude and longitude points for rapid deepening:")
+for lat_lon in deepening_lat_lon:
+    print(lat_lon)
+
+print("Latitude and longitude points for rapid collapsing:")
+for lat_lon in collapsing_lat_lon:
+    print(lat_lon)
 
 ## Plot rapid deepening + collapsing
 
@@ -342,12 +429,12 @@ index = np.arange(num_files) # Creating an index for each pair
 bar_width = 0.35
 
 plt.figure(figsize=(10, 6))
-bar1 = plt.bar(index, n_rapid_deepening, bar_width, color='b', label='Rapid Deepening')
-bar2 = plt.bar(index + bar_width, n_rapid_collapsing, bar_width, color='r', label='Rapid Collapsing')
+bar1 = plt.bar(index, n_rapid_deepening, bar_width, color='b', label='Rapid Intensification')
+bar2 = plt.bar(index + bar_width, n_rapid_collapsing, bar_width, color='r', label='Rapid Weakening')
 
-plt.xlabel('Configuration')
+plt.xlabel('Model simulation')
 plt.ylabel('Number of occurances')
-plt.title('Rapid Deepening and Collapsing Occurances')
+plt.title('Rapid Intensification and Weakening Occurances')
 plt.xticks(index + bar_width / 2, traj_files_legend)
 
 plt.legend()
@@ -369,7 +456,7 @@ else:
 keys_for_statistics = ['xpres','xwind','xrmw', 'xurmw', 'xr8', 'xike', 'xmax_prect', 'xgt10_prect', 'xmax_tmq', 'xslp', 'xmax_wind10', 'xmax_wind850', 'xgt8_wind10', 'xgt10_wind850', 'xvarpsl']
 
 # Calculate and print statistics for each list
-calculate_and_print_statistics(processed_data, keys_for_statistics)
+calculate_and_print_statistics(processed_data, keys_for_statistics, traj_files_legend)
 
 ####
 
