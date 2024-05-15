@@ -204,16 +204,19 @@ def plot_histograms(processed_data, key, title, units, legend_names, save_figs):
 
     # Loop over each dataset in the data list and plot a line for the histogram
     for i, mydata in enumerate(data_list):
-        counts, bin_edges = np.histogram(mydata.flatten(), bins=20, range=(overall_min, overall_max))
+        counts, bin_edges = np.histogram(mydata.flatten(), bins=20, range=(overall_min, overall_max), density=False)
+        counts = counts / counts.sum()  # Normalize counts to make the integral equal to 1
         bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])  # Calculate bin centers
         label = legend_names[i] if i < len(legend_names) else f'Dataset {i+1}'
         plt.plot(bin_centers, counts, label=label, linewidth=2)
 
     # Customize the plot
-    plt.title(f'{title} distributions')
-    plt.xlabel(f'{title} ({units})')
-    plt.ylabel('Frequency')
-    plt.legend()
+    plt.title(f'{title} distributions', fontsize=15)
+    plt.xlabel(f'{title} ({units})', fontsize=14)
+    plt.ylabel('Density', fontsize=14)
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
+    plt.legend(fontsize=14)
 
     if save_figs:
         figs_dir = "figs"
@@ -234,7 +237,7 @@ def plot_histograms_with_control_deviation(processed_data, key, title, units, le
     overall_max = max(np.nanmax(dev) for dev in deviations)
 
     # Determine bin width and create bin edges with 0 centered
-    num_bins = 25
+    num_bins = 21
     bin_width = max(abs(overall_max), abs(overall_min)) / (num_bins / 2)
     bin_edges = np.arange(-bin_width * (num_bins / 2), bin_width * (num_bins / 2) + bin_width, bin_width)
 
@@ -243,17 +246,23 @@ def plot_histograms_with_control_deviation(processed_data, key, title, units, le
 
     # Loop over each deviation dataset and plot a histogram
     for i, deviation_data in enumerate(deviations):
-        counts, _ = np.histogram(deviation_data, bins=bin_edges, density=True)
+        counts, _ = np.histogram(deviation_data, bins=bin_edges, density=False)
+        counts = counts / counts.sum()  # Normalize counts to make the integral equal to 1
         plt.step(bin_edges[:-1], counts, where='post', label=legend_names[i+1] if i+1 < len(legend_names) else f'Dataset {i+2}', linewidth=2)
 
     # Add a dashed vertical line at 0 for reference
     plt.axvline(x=0, color='gray', linestyle='--')
 
     # Customize the plot
-    plt.title(f'Deviation from Historical: {title} distributions')
-    plt.xlabel(f'Deviation in {title} ({units})')
-    plt.ylabel('Density')
-    plt.legend()
+    plt.title(f'Deviation from Hist.: {title} distributions', fontsize=15)
+    plt.xlabel(f'Deviation in {title} ({units})', fontsize=14)
+    plt.ylabel('Density', fontsize=14)
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
+    plt.legend(fontsize=14)
+
+    # Set the y-axis precision format
+    plt.gca().yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{x:.1f}'))
 
     if save_figs:
         figs_dir = "figs"
@@ -325,6 +334,7 @@ processed_data['xvarpsl'] = [np.abs(data) for data in processed_data['xdpsl']]
 # Add random white noise to 'xrmw' since it's very discretized
 # noise_level is in units of degrees and as randomly distributed around 0.
 # we can think of this as adding observational uncertainty
+np.random.seed(1998)
 noise_level = 0.1
 for i in range(len(processed_data['xrmw'])):
     noise = np.random.uniform(low=-noise_level, high=noise_level, size=processed_data['xrmw'][i].shape)
@@ -549,14 +559,13 @@ else:
 ####
 
 plot_params = [
-    ('xmax_tmq', 'Maximum precipitable water', 'mm'),
-    ('xmax_prect', 'Maximum precipitation rate', 'mm/hr'),
-    ('xmax_wind850', 'Maximum 850 hPa wind speed', 'm/s'),
+    ('xmax_tmq', 'Max. precipitable water', 'mm'),
+    ('xmax_prect', 'Max. precip. rate', 'mm/hr'),
+    ('xmax_wind850', 'Max. 850 hPa wind speed', 'm/s'),
     ('xrmw', 'Radius of Maximum Wind', 'km'),
-    ('xgt10_prect', 'Area of precipitation rates greater than 10', 'square km'),
-    ('xgt10_wind850', 'Area of 850mb winds greater than 10 m/s', 'square km'),
-    ('xr8', 'Radius of 8 m/s wind', 'km'),
-    ('xvarpsl', 'Magnitude of 6-hourly PSL change', 'hPa/6hr'),
+    ('xgt10_prect', 'Area of precip. rates > 10mm/hr', '1000 km2'),
+    ('xr8', 'Radius of 8m/s wind', 'km'),
+    ('xvarpsl', 'Magnitude of 6h dPSL', 'hPa/6hr'),
     ('xslp', 'Minimum sea level pressure', 'hPa')
 ]
 
