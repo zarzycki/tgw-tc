@@ -172,6 +172,8 @@ quote = inttochar(34)
 delim="	"
 system("rm -v -rf "+filename)
 
+stormfile="storm_names.txt"
+system("rm -v -rf "+stormfile)
 
 
 ; debugging, set this to a small number
@@ -215,6 +217,10 @@ if (jj .eq. 0) then
     print(HEADSTR+"")
   end if
   system("echo "+quote+      HEADSTR      +quote+" >> "+filename)
+
+  storm_string:=these_name(nearest_index)+delim+xyear(ii,jj)+delim+xmonth(ii,jj)+delim+xday(ii,jj)+delim+xhour(ii,jj)+delim+numentries
+  system("echo "+quote+      storm_string      +quote+" >> "+stormfile)
+
 end if
 
 STORMSTR=delim+"-999"+delim+"-999"+delim+sprintf("%6.2f", these_lon(nearest_index))+delim+sprintf("%6.2f", these_lat(nearest_index))+delim+sprintf("%6.0f", these_pres(nearest_index))+delim+sprintf("%8.2f", these_wind(nearest_index))+delim+sprintf("%5.2f", these_dist(nearest_index))+delim+xyear(ii,jj)+delim+xmonth(ii,jj)+delim+xday(ii,jj)+delim+xhour(ii,jj)
