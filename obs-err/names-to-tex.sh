@@ -4,6 +4,7 @@ ncolumns=3
 input_file="storm_names.txt"
 output_file="storm_names.tex"
 
+# remove any existing output file
 rm -rf -v $output_file
 
 # Function to write a table to the LaTeX file
@@ -22,6 +23,7 @@ write_table() {
 
   echo "\begin{table}[H]" >> $output_file
   echo "\centering" >> $output_file
+  echo "\captionsetup{labelformat=empty}" >> $output_file
   echo "\footnotesize" >> $output_file
   echo "\begin{tabular}{${column_format}}" >> $output_file
 
@@ -64,11 +66,11 @@ entries_part2=("${entries[@]:181}")
 
 # Write the first table with a specific caption and 4 columns
 entries=("${entries_part1[@]}")
-write_table "1980-2002 analyzed storms. Each line contains the WMO storm name, track initiation time and date, and number of points along that storm's trajectory in the TGW runs." $ncolumns
+write_table "Table S1: 1980-2002 analyzed storms. Each line contains the World Meteorological Organization (WMO) storm name, track initiation time and date, and number of points along that storm's trajectory in the TGW simulations." $ncolumns
 
 # Page break between tables
-echo "\newpage" >> $output_file
+#echo "\newpage" >> $output_file
 
 # Write the second table with a different caption and 3 columns
 entries=("${entries_part2[@]}")
-write_table "2003-2019 analyzed storms. Each line contains the WMO storm name, track initiation time and date, and number of points along that storm's trajectory in the TGW runs." $ncolumns
+write_table "Table S2: 2003-2019 analyzed storms. Each line contains the World Meteorological Organization (WMO) storm name, track initiation time and date, and number of points along that storm's trajectory in the TGW simulations." $ncolumns
