@@ -6,23 +6,23 @@ import cartopy.crs as ccrs
 import os
 import matplotlib.patches as mpatches
 
-historical=False
-box_size=8.0
+historical=True
+box_size=9.0
 plot_index=20
 
 root_dir = "/Users/cmz5202/Software/tgw-tc/netcdf/"
 if historical:
     plotstring="hist"
-    aux = "wrfout_d01_2005-08-27_00:00:00_3hourly.aux.nc"
-    aux2 = "wrfout_d01_2005-08-27_00:00:00_3hourly.aux2.nc"
-    prec3hr = "wrfout_d01_2005-08-27_00:00:00_3hourly.nc"
+    aux = "wrfout_d01_2005-08-27_00_00_00_3hourly.aux.nc"
+    aux2 = "wrfout_d01_2005-08-27_00_00_00_3hourly.aux2.nc"
+    prec3hr = "wrfout_d01_2005-08-27_00_00_00_3hourly.nc"
     center_lat=28.992945
     center_lon=-89.544250
 else:
     plotstring="hotfar"
-    aux = "wrfout_d01_2085-08-27_00:00:00_3hourly.aux.nc"
-    aux2 = "wrfout_d01_2085-08-27_00:00:00_3hourly.aux2.nc"
-    prec3hr = "wrfout_d01_2085-08-27_00:00:00_3hourly.nc"
+    aux = "wrfout_d01_2085-08-27_00_00_00_3hourly.aux.nc"
+    aux2 = "wrfout_d01_2085-08-27_00_00_00_3hourly.aux2.nc"
+    prec3hr = "wrfout_d01_2085-08-27_00_00_00_3hourly.nc"
     center_lat=28.877024
     center_lon=-89.431458
 
@@ -64,18 +64,22 @@ ax.set_extent([-135, -59, 20, 50])
 
 # Adding gridlines
 gridlines = ax.gridlines(draw_labels=True)
+gridlines.top_labels = False
+gridlines.right_labels = False
+gridlines.left_labels = False
+gridlines.bottom_labels = False
 
 # Adjust color scale and plot data with specified colorbar limits
 im = plt.pcolormesh(lon, lat, TMQ[plot_index], cmap='inferno', vmin=10, vmax=110, transform=ccrs.PlateCarree())
 
 # Shrink the vertical extent of the colorbar
-plt.colorbar(im, shrink=0.55)
+plt.colorbar(im, pad=0.015, shrink=0.55)
 
 # Format the time coordinate and set as title
 time_str = time[plot_index].dt.strftime('%Y-%m-%d %H:%M').item()  # Adjust this line if necessary
-plt.title(time_str)
-plt.xlabel('Longitude')
-plt.ylabel('Latitude')
+plt.title(time_str, fontsize=20)
+ax.set_xlabel('')
+ax.set_ylabel('')
 
 # Draw a XxX lat/lon box around the storm center
 no_box = mpatches.Rectangle((center_lon - (box_size/2.), center_lat - (box_size/2.)), box_size, box_size, fill=False, edgecolor='lime', linewidth=4, linestyle='-', transform=ccrs.PlateCarree())
@@ -87,4 +91,4 @@ plt.tight_layout(pad=0)  # Reduce padding around the figure
 #plt.savefig('./figs/2dTMQ_'+plotstring+'.pdf')
 plt.savefig('./figs/2dTMQ_'+plotstring+'.png', dpi=400, bbox_inches='tight', pad_inches=0)
 
-plt.show()
+#plt.show()
