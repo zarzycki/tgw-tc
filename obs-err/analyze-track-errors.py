@@ -29,6 +29,22 @@ stats = {
 for stat_name, stat_values in stats.items():
     print(f"{stat_name}:\n{stat_values}\n")
 
+# Prepare the statistics for CSV output
+output_data = {
+    'min': stats['Min'],
+    '5th': stats['5% Percentile'],
+    'median': stats['Median'],
+    'mean': stats['Mean'],
+    '95th': stats['95% Percentile'],
+    'max': stats['Max']
+}
+
+# Convert to DataFrame
+output_df = pd.DataFrame(output_data)
+
+# Write to CSV
+output_df.to_csv('output_statistics.csv', index_label='Column')
+
 # Set the style of the seaborn plot
 sns.set(style="whitegrid")
 
