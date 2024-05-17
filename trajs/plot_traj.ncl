@@ -96,15 +96,25 @@ if (basin .eq. "refine")
 end if
 if (basin .eq. "conus")
   res@mpMinLatF             = 20
-  res@mpMaxLatF             = 55
-  res@mpMinLonF             = 230
-  res@mpMaxLonF             = 300
+  res@mpMaxLatF             = 51
+  res@mpMinLonF             = 235
+  res@mpMaxLonF             = 297
 end if
 if (basin .eq. "tropics")
   res@mpMinLatF             = -65
   res@mpMaxLatF             = 65
   res@mpCenterLonF = 200.
 end if
+
+res@mpGridAndLimbOn      = True
+res@gsnMajorLatSpacing = 10
+res@gsnMajorLonSpacing = 10
+res@gsnMinorLatSpacing = 2
+res@gsnMinorLonSpacing = 2
+res@mpGridSpacingF       = 10
+res@mpGridLineDashPattern = 2
+res@tmXTOn = False
+res@tmYROn = False
 
 map = gsn_csm_map_ce(wks,res)
 
@@ -156,7 +166,7 @@ thisLon=lon(i,j)
 if (.not.ismissing(thisWind))
 
 
-  polyres@gsMarkerSizeF = 0.0075         ; select size to avoid streaking
+  polyres@gsMarkerSizeF = 0.008
   if (thisWind .gt. SSthresh_wind(0))
     polyres@gsMarkerColor = (/"blue"/)
     lineres@gsLineColor = (/"blue"/)
@@ -167,22 +177,22 @@ if (.not.ismissing(thisWind))
     lineres@gsLineColor = (/"green"/)
     lineres@gsLineThicknessF = linethicknesses(1)
   else if (thisWind .le. SSthresh_wind(1) .and. thisWind .gt. SSthresh_wind(2))
-    polyres@gsMarkerSizeF = polyres@gsMarkerSizeF*1.6
+    polyres@gsMarkerSizeF = polyres@gsMarkerSizeF*1.7
     polyres@gsMarkerColor = (/"yellow"/)
     lineres@gsLineColor = (/"yellow"/)
     lineres@gsLineThicknessF = linethicknesses(2)
   else if (thisWind .le. SSthresh_wind(2) .and. thisWind .gt. SSthresh_wind(3))
-    polyres@gsMarkerSizeF = polyres@gsMarkerSizeF*1.9
+    polyres@gsMarkerSizeF = polyres@gsMarkerSizeF*2.0
     polyres@gsMarkerColor = (/"orange"/)
     lineres@gsLineColor = (/"orange"/)
     lineres@gsLineThicknessF = linethicknesses(3)
   else if (thisWind .le. SSthresh_wind(3) .and. thisWind .gt. SSthresh_wind(4))
-    polyres@gsMarkerSizeF = polyres@gsMarkerSizeF*2.2
+    polyres@gsMarkerSizeF = polyres@gsMarkerSizeF*2.3
     polyres@gsMarkerColor = (/"darkorange3"/)
     lineres@gsLineColor = (/"darkorange3"/)
     lineres@gsLineThicknessF  = linethicknesses(4)
   else
-    polyres@gsMarkerSizeF = polyres@gsMarkerSizeF*2.6
+    polyres@gsMarkerSizeF = polyres@gsMarkerSizeF*2.7
     polyres@gsMarkerColor = (/"red"/)
     lineres@gsLineColor = (/"red"/)
     lineres@gsLineThicknessF  = linethicknesses(5)
@@ -296,7 +306,7 @@ amres@amParallelPosF   = -0.46
 amres@amOrthogonalPosF = -0.18
 else if (basin .eq. "conus") then
 amres@amParallelPosF   = -0.45
-amres@amOrthogonalPosF = -0.35
+amres@amOrthogonalPosF = -0.34
 else
 amres@amParallelPosF   = -0.30		    ; move legend to the right .37 formerly
 amres@amOrthogonalPosF = .27             ; move the legend down
