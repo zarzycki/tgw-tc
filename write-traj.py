@@ -162,6 +162,19 @@ GT8_WIND10 = count_spatial_gridpoints(snap_WIND10, '>=', 8.0)
 GT10_WIND850 = count_spatial_gridpoints(snap_WIND850, '>=', 10.0)
 GT10_PRECT = count_spatial_gridpoints(snap_PRECT, '>=', 10.0)
 
+meters_x_composite=11000
+thresh_ike_850 = 17.5
+thresh_ike_10 = 10.0
+ike_850wind_scaling = 0.80   # Correction from 850 to surface winds
+derivIKE850 = ((ike_850wind_scaling*snap_WIND850) ** 2) * (meters_x_composite ** 2)
+derivIKE850 = derivIKE850.where(snap_WIND850 > thresh_ike_850, 0)
+derivIKE850_sum = 0.5 * derivIKE850.sum(dim=['y', 'x'])
+derivIKE850_sum = derivIKE850_sum * 1e-12
+derivIKE10 = (snap_WIND10 ** 2) * (meters_x_composite ** 2)
+derivIKE10 = derivIKE10.where(snap_WIND10 > thresh_ike_10, 0)
+derivIKE10_sum = 0.5 * derivIKE10.sum(dim=['y', 'x'])
+derivIKE10_sum = derivIKE10_sum * 1e-12
+
 # Reshape any new arrays
 xslp = conform_to_reference_2d(xwind, min_SLP)
 xmax_prect = conform_to_reference_2d(xwind, max_PRECT)
@@ -172,6 +185,8 @@ xlt1000_slp = conform_to_reference_2d(xwind, LT1000_SLP)
 xgt8_wind10 = conform_to_reference_2d(xwind, GT8_WIND10)
 xgt10_wind850 = conform_to_reference_2d(xwind, GT10_WIND850)
 xgt10_prect = conform_to_reference_2d(xwind, GT10_PRECT)
+xike850 = conform_to_reference_2d(xwind, derivIKE850_sum)
+xike10 = conform_to_reference_2d(xwind, derivIKE10_sum)
 
 # Write file
 write_cyclone_tracks(
@@ -184,7 +199,9 @@ write_cyclone_tracks(
     xurmw=(xurmw,'.6e'),
     xrmw =(xrmw, '.6e'),
     xr8  =(xr8,  '.6e'),
-    xike =(xike, '.6e'),
+    #xike =(xike, '.6e'),
+    #xike10 =(xike10, '.6e'),
+    xike850 =(xike850, '.6e'),
     xslp =(xslp, '.6e'),
     xmax_wind10=(xmax_wind10,'.6e'),
     xmax_wind850=(xmax_wind850,'.6e'),

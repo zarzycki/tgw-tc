@@ -345,7 +345,7 @@ for i in range(len(processed_data['xr8'])):
 
 apply_conversion_to_key(processed_data, 'xrmw', 111.1)
 apply_conversion_to_key(processed_data, 'xr8', 111.1)
-apply_conversion_to_key(processed_data, 'xike', 1e-9)
+#apply_conversion_to_key(processed_data, 'xike', 1e-9)
 # Assuming 0.1x0.1deg GCD, so 11.1^2 = 123.21 km^2 for each cell
 apply_conversion_to_key(processed_data, 'xgt10_prect', 123.21/1000)   # 1000 km2
 apply_conversion_to_key(processed_data, 'xgt10_wind850', 123.21/1000) # 1000 km2
