@@ -5,13 +5,22 @@ import cartopy
 import cartopy.crs as ccrs
 import os
 import matplotlib.patches as mpatches
+import argparse
 
-historical=True
+parser = argparse.ArgumentParser(description='Process some integers.')
+parser.add_argument('--historical', dest='historical', action='store_true',
+                    help='Set to use historical data')
+parser.add_argument('--future', dest='historical', action='store_false',
+                    help='Set to use future projection data')
+parser.set_defaults(historical=True)
+
+args = parser.parse_args()
+
 box_size=9.0
 plot_index=20
 
 root_dir = "/Users/cmz5202/Software/tgw-tc/netcdf/"
-if historical:
+if args.historical:
     plotstring="hist"
     aux = "wrfout_d01_2005-08-27_00_00_00_3hourly.aux.nc"
     aux2 = "wrfout_d01_2005-08-27_00_00_00_3hourly.aux2.nc"

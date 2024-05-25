@@ -67,4 +67,4 @@ plt.tight_layout(pad=0)  # Reduce padding around the figure
 #plt.savefig('./figs/2dTMQ_'+plotstring+'.pdf')
 plt.savefig('./figs/snap_panel_comparison.png', dpi=400, bbox_inches='tight', pad_inches=0)
 
-plt.show()
+#plt.show()
