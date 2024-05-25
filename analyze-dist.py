@@ -457,17 +457,18 @@ plt.figure(figsize=(10, 6))
 bar1 = plt.bar(index, n_rapid_deepening, bar_width, color='b', label='Rapid Intensification')
 bar2 = plt.bar(index + bar_width, n_rapid_collapsing, bar_width, color='r', label='Rapid Weakening')
 
-plt.xlabel('Model simulation')
-plt.ylabel('Number of occurances')
-plt.title('Rapid Intensification and Weakening Occurances')
-plt.xticks(index + bar_width / 2, traj_files_legend)
+#plt.xlabel('Model simulation',fontsize=16)
+plt.ylabel('Number of occurances',fontsize=16)
+plt.title('Rapid Intensification and Weakening Occurances',fontsize=16)
+plt.xticks(index + bar_width / 2, traj_files_legend,fontsize=16)
+plt.yticks(fontsize=16)
 
-plt.legend()
+plt.legend(fontsize=14)
 
 if save_figs:
     figs_dir = "figs"
     os.makedirs(figs_dir, exist_ok=True)  # Create the directory if it doesn't exist
-    filename = os.path.join(figs_dir, "rapid_deepening_collapsing.png")
+    filename = os.path.join(figs_dir, "rapid_deepening_collapsing.pdf")
     plt.savefig(filename, bbox_inches='tight')
     plt.close()  # Close the plot to free up memory
 else:
@@ -486,21 +487,21 @@ calculate_and_print_statistics(processed_data, keys_for_statistics, traj_files_l
 ####
 
 pretty_labels = {
-    'xpres': 'Pressure',
-    'xwind': 'Wind Speed',
-    'xrmw': 'Radius of Max. Wind',
+    'xpres': r'MSLP',
+    'xwind': r'$u_{10m,x}$',
+    'xrmw': r'RMW',
     'xurmw': 'Wind at Radius of Max. Wind',
-    'xr8': 'R8 Radius',
-    'xike': 'Storm IKE',
-    'xmax_prect': 'Max. Precip. Rate',
-    'xgt10_prect': 'Area Precip. >10 mm/hr',
-    'xmax_tmq': 'Max. TPW',
-    'xslp': 'Min. SLP',
-    'xmax_wind10': 'Max. 10m Wind Speed',
-    'xmax_wind850': 'Max. 850hPa Wind Speed',
+    'xr8': r'$r_{8}$',
+    'xike': r'IKE',
+    'xmax_prect': r'$\mathrm{Prec}_{x}$',
+    'xgt10_prect': r'$\mathrm{Prec}_{\mathrm{area}>10}$',
+    'xmax_tmq': r'$\mathrm{TPW}_{x}$',
+    'xslp': r'MSLP',
+    'xmax_wind10': r'$u_{10m,x}$',
+    'xmax_wind850': r'$u_{850mb,x}$',
     'xgt8_wind10': 'Area 10m Wind >8 m/s',
     'xgt10_wind850': 'Area 850hPa Wind >10 m/s',
-    'xvarpsl': '6h dPSL Magnitude'
+    'xvarpsl': r'$|$dPSL$|$'
 }
 
 x_labels_with_newlines = {
@@ -510,7 +511,7 @@ x_labels_with_newlines = {
     'Hot Far': 'Hot\nFar'
 }
 
-keys_for_percentages = ['xmax_wind10', 'xslp', 'xmax_tmq', 'xmax_prect', 'xgt10_prect', 'xike', 'xr8', 'xrmw', 'xvarpsl']
+keys_for_percentages = ['xslp', 'xmax_wind10', 'xike', 'xmax_tmq', 'xmax_prect', 'xgt10_prect', 'xr8', 'xrmw', 'xvarpsl']
 
 percentages_results = snapshot_percent_increase(processed_data, keys_for_percentages)
 
@@ -540,7 +541,7 @@ heatmap = sns.heatmap(df, annot=True, fmt="d", linewidths=.5, cmap=cmap, center=
 
 # Set the size of the tick labels
 heatmap.tick_params(axis='x', labelsize=16)
-heatmap.tick_params(axis='y', labelsize=16)
+heatmap.tick_params(axis='y', labelsize=16, rotation=0)
 
 # Adjust colorbar label size
 cbar = heatmap.collections[0].colorbar
@@ -551,7 +552,7 @@ if save_figs:
     figs_dir = "figs"
     os.makedirs(figs_dir, exist_ok=True)  # Create the directory if it doesn't exist
     plt.tight_layout()  # Adjust the padding between and around subplots.
-    plt.savefig(os.path.join(figs_dir, "heatmap.png"), bbox_inches='tight')  # Save the figure, ensuring nothing is cut off
+    plt.savefig(os.path.join(figs_dir, "heatmap.pdf"), bbox_inches='tight')  # Save the figure, ensuring nothing is cut off
     plt.close()
 else:
     plt.show()
