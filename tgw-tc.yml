@@ -1,0 +1,14 @@
+name: tgw-tc
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - matplotlib=3.7
+  - numpy=1.23
+  - scipy=1.10
+  - xarray=2023.2
+  - pandas=1.5
+  - netcdf4=1.6
+  - cartopy=0.21
+  - shapely=2.0
+  - seaborn=0.13
