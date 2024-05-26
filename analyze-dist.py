@@ -200,7 +200,7 @@ def plot_histograms(processed_data, key, title, units, legend_names, save_figs):
     overall_max = max(np.nanmax(data.flatten()) for data in data_list)
 
     # Set up the figure and axes
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(11, 6))
 
     # Loop over each dataset in the data list and plot a line for the histogram
     for i, mydata in enumerate(data_list):
@@ -221,7 +221,7 @@ def plot_histograms(processed_data, key, title, units, legend_names, save_figs):
     if save_figs:
         figs_dir = "figs"
         os.makedirs(figs_dir, exist_ok=True)  # Create the directory if it doesn't exist
-        filename = os.path.join(figs_dir, f"{key}_distribution.png")
+        filename = os.path.join(figs_dir, f"{key}_distribution.pdf")
         plt.savefig(filename, bbox_inches='tight')
         plt.close()
     else:
@@ -242,7 +242,7 @@ def plot_histograms_with_control_deviation(processed_data, key, title, units, le
     bin_edges = np.arange(-bin_width * (num_bins / 2), bin_width * (num_bins / 2) + bin_width, bin_width)
 
     # Set up the figure and axes for deviation histograms
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(11, 6))
 
     # Loop over each deviation dataset and plot a histogram
     for i, deviation_data in enumerate(deviations):
@@ -264,10 +264,14 @@ def plot_histograms_with_control_deviation(processed_data, key, title, units, le
     # Set the y-axis precision format
     plt.gca().yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{x:.1f}'))
 
+    # Set the x-axis limits to prevent overhang
+    REDUCTION_FACTOR=0.975   # Smaller REDUCTION_FACTOR means more aggressive adjustment
+    plt.xlim(bin_edges[0], bin_edges[-1] - bin_width / REDUCTION_FACTOR)
+
     if save_figs:
         figs_dir = "figs"
         os.makedirs(figs_dir, exist_ok=True)  # Create the directory if it doesn't exist
-        filename = os.path.join(figs_dir, f"{key}_deviation_from_control.png")
+        filename = os.path.join(figs_dir, f"{key}_deviation_from_control.pdf")
         plt.savefig(filename, bbox_inches='tight')
         plt.close()
     else:
@@ -429,7 +433,7 @@ for i, data in enumerate(processed_data['xdpsl']):
     figs_dir = "figs"
     os.makedirs(figs_dir, exist_ok=True)
     filename_safe = traj_files_legend[i].replace(' ', '_')  # Replace spaces with underscores
-    filename = os.path.join(figs_dir, f"map_ri_events_{filename_safe}.png")
+    filename = os.path.join(figs_dir, f"map_ri_events_{filename_safe}.pdf")
     plt.savefig(filename, bbox_inches='tight')
     plt.close()
 
@@ -562,11 +566,13 @@ else:
 plot_params = [
     ('xmax_tmq', 'Max. precipitable water', 'mm'),
     ('xmax_prect', 'Max. precip. rate', 'mm/hr'),
-    ('xmax_wind850', 'Max. 850 hPa wind speed', 'm/s'),
+    ('xmax_wind10', 'Max. 10m wind speed', 'm/s'),
+    ('xmax_wind850', 'Max. 850hPa wind speed', 'm/s'),
     ('xrmw', 'Radius of Maximum Wind', 'km'),
     ('xgt10_prect', 'Area of precip. rates > 10mm/hr', '1000 km2'),
     ('xr8', 'Radius of 8m/s wind', 'km'),
     ('xvarpsl', 'Magnitude of 6h dPSL', 'hPa/6hr'),
+    ('xike', 'Integrated Kinetic Energy', 'TJ'),
     ('xslp', 'Minimum sea level pressure', 'hPa')
 ]
 
