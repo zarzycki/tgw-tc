@@ -14,6 +14,12 @@ error_vars=(
   "wind"
 )
 
+if command -v gsed >/dev/null 2>&1; then
+  sed_cmd="gsed"
+else
+  sed_cmd="sed"
+fi
+
 for var in "${error_vars[@]}"; do
 
   error_files=()
@@ -23,7 +29,7 @@ for var in "${error_vars[@]}"; do
     this_error_file="${var}_errors_${track_file}"
     error_files+=($this_error_file)
     ncl get-errors.ncl 'xfile="../trajs/'${reference_file}'"' 'yfile="../trajs/'${track_file}'"' 'outfile="./'$this_error_file'"' 'error_var="'${var}'"'
-    gsed -i "1i $track_file" "$this_error_file"
+    $sed_cmd -i "1i $track_file" "$this_error_file"
   done
 
   ## Concatenate everything into a multi-column CSV
