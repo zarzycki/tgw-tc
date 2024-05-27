@@ -1,4 +1,4 @@
-load "/Users/cmz5202/Software/cymep/ncl/functions/getTrajectoriesGeneric.ncl"
+load "getTrajectoriesGeneric.ncl"
 
 begin
 

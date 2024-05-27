@@ -1,8 +1,8 @@
-load "/Users/cmz5202/Software/cymep/ncl/functions/getTrajectoriesGeneric.ncl"
+load "getTrajectoriesGeneric.ncl"
 
 begin
 
-gridfile="/Users/cmz5202/NetCDF/topo_files/ERA5.topo.nc"
+gridfile="./ERA5.topo.nc"
 is_grid_2D=False
 flip_grid_180=True
 correct_pres_wind = True ; do we want to fill in missing P/W with K&Z 07?
