@@ -2,8 +2,8 @@ import xarray as xr
 import numpy as np
 import matplotlib.pyplot as plt
 
-snap_his = xr.open_dataset('/Users/cmz5202/Software/tgw-tc/netcdf/composite_aux2_CONUS_TGW_WRF_Historical.nc')
-snap_fut = xr.open_dataset('/Users/cmz5202/Software/tgw-tc/netcdf/composite_aux2_CONUS_TGW_WRF_SSP585_HOT_FAR.nc')
+snap_his = xr.open_dataset('./netcdf/composite_aux2_CONUS_TGW_WRF_Historical.nc')
+snap_fut = xr.open_dataset('./netcdf/composite_aux2_CONUS_TGW_WRF_SSP585_HOT_FAR.nc')
 time = snap_his.snap_time
 time_strings = time.dt.strftime('%Y-%m-%d %H:%M:%S').values
 #for t in time_strings:

@@ -1,6 +1,4 @@
-load "~/Software/cymep/ncl/functions/surfaceWindCorrFactor.ncl"
-load "~/Software/cymep/ncl/functions/getTrajectoriesGeneric.ncl"
-load "~/Software/cymep/ncl/functions/mask_tc.ncl"
+load "../obs-err/getTrajectoriesGeneric.ncl"
 
 begin
 
@@ -11,8 +9,6 @@ factor = 1.0
 
 pres_thresh=950.
 basinfilt = -1
-maskspacing=1.0
-tcMask = mask_tc_allbasin(0,-999,-999,maskspacing,360)
 
 thedir="./"
 thefile="traj.Historical_time_cleaned.txt_final"

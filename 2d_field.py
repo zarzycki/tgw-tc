@@ -19,7 +19,7 @@ args = parser.parse_args()
 box_size=9.0
 plot_index=20
 
-root_dir = "/Users/cmz5202/Software/tgw-tc/netcdf/"
+root_dir = "./netcdf/"
 if args.historical:
     plotstring="hist"
     aux = "wrfout_d01_2005-08-27_00_00_00_3hourly.aux.nc"
