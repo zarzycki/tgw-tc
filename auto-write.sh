@@ -7,6 +7,8 @@ rm -fv trajs/*.pdf
 rm -fv figs/*.pdf
 rm -fv figs/*.png
 
+mkdir -p figs/
+
 # Check if ncl exists
 if ! type ncl &> /dev/null ; then
   echo "ERROR: ncl does not exist. Make sure ncl is in your path" ; exit 1
