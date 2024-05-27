@@ -12,3 +12,4 @@ dependencies:
   - cartopy=0.21
   - shapely=2.0
   - seaborn=0.13
+#  - ncl=6.6.2
