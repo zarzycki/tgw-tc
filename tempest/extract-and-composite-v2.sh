@@ -60,7 +60,7 @@ echo "Gathering aux files"
 ls ${AUXDIR}/wrfout_d01_????*.nc > aux_file_list.txt
 echo "Gathering aux2 files"
 ls ${AUX2DIR}/wrfout_d01_????*.nc > aux2_file_list.txt
-echo "Gathering Pre files"
+echo "Gathering Precip files"
 ls ${AUX3DIR}/wrfout_d01_????*.nc > aux3_file_list.txt
 
 ## What is the name of the final script we want to create?
@@ -78,8 +78,8 @@ ${TEMPESTEXTREMESDIR}/bin/NodeFileCompose --in_nodefile ${TRAJFILENAME} --in_fmt
 
 ## Add rmw, wind@rmw, r8, ike to tempest files
 echo "Calculating additional derived diagnostics with NFE"
-${TEMPESTEXTREMESDIR}/bin/NodeFileEditor --in_data_list aux_file_list.txt  --in_nodefile ${FINALTRAJ}      --in_fmt "lon,lat,slp,wind,dps"                           --out_nodefile tmp1.${randomstr} --regional --latname "XLAT" --lonname "XLONG" --calculate "rprof=radial_wind_profile(U10,V10,50,0.1);r_max_az_wind=lastwhere(rprof,=,max);max_az_wind=value(rprof,r_max_az_wind)"   --out_fmt "lon,lat,slp,wind,dps,max_az_wind,r_max_az_wind"
-${TEMPESTEXTREMESDIR}/bin/NodeFileEditor --in_data_list aux2_file_list.txt --in_nodefile tmp1.${randomstr} --in_fmt "lon,lat,slp,wind,dps,max_az_wind,r_max_az_wind" --out_nodefile tmp2.${randomstr}  --regional --latname "XLAT" --lonname "XLONG" --calculate "rprof=radial_wind_profile(U850,V850,40,0.25);r8=lastwhere(rprof,>=,8.0);ike=eval_ike(U850,V850,5.0)"                    --out_fmt "lon,lat,slp,wind,dps,max_az_wind,r_max_az_wind,r8,ike"
+${TEMPESTEXTREMESDIR}/bin/NodeFileEditor --in_data_list aux_file_list.txt  --in_nodefile ${FINALTRAJ}      --in_fmt "lon,lat,slp,wind,dps"                           --out_nodefile tmp1.${randomstr} --regional --latname "XLAT" --lonname "XLONG" --calculate "rprof=radial_wind_profile(U10,V10,50,0.1);r_max_az_wind=lastwhere(rprof,=,max);max_az_wind=value(rprof,r_max_az_wind)"  --out_fmt "lon,lat,slp,wind,dps,max_az_wind,r_max_az_wind"
+${TEMPESTEXTREMESDIR}/bin/NodeFileEditor --in_data_list aux2_file_list.txt --in_nodefile tmp1.${randomstr} --in_fmt "lon,lat,slp,wind,dps,max_az_wind,r_max_az_wind" --out_nodefile tmp2.${randomstr} --regional --latname "XLAT" --lonname "XLONG" --calculate "rprof=radial_wind_profile(U850,V850,40,0.25);r8=lastwhere(rprof,>=,8.0);ike=eval_ike(U850,V850,5.0)"                    --out_fmt "lon,lat,slp,wind,dps,max_az_wind,r_max_az_wind,r8,ike"
 
 ## Overwrite intermediate ASCII tempest tracks with FINALTRAJ to be used in analysis code
 mv -v tmp2.${randomstr} ${FINALTRAJ}

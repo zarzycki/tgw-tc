@@ -59,19 +59,19 @@ starttime=$(date -u +"%s")
 echo "Create some dirs"
 mkdir -v -p ${SCRATCHDIR}
 
-echo "Gathering precip files"
+echo "Gathering WRF files"
 ls ${AUXDIR}/wrfout_d01_????*.nc > a_file_list.txt
 
-echo "Create filtered files"
-PRECIPFILES=`ls ${AUXDIR}/wrfout_d01_????*.nc`
-for g in $PRECIPFILES
+echo "Create filtered WRF files"
+WRFFILTFILES=`ls ${AUXDIR}/wrfout_d01_????*.nc`
+for g in $WRFFILTFILES
 do
   filename=${g}
   just_filename=`basename $g`
   echo "$SCRATCHDIR/${just_filename}_5deg_filtered.nc" >> a_output_files.txt
 done
 
-echo "extract TC precip using a set radius of 3 GCD"
+echo "extract TC fields using a set radius of 3 GCD"
 $MPICOMMAND ${TEMPESTEXTREMESDIR}/bin/NodeFileFilter --in_nodefile ${FILTNODE} --in_fmt "lon,lat,pres,wind,phis" --in_data_list "a_file_list.txt" --out_data_list "a_output_files.txt" --bydist 3.0 --var "SLP,U10,V10,OLR" --preserve "XLAT,XLONG" --regional --fillvalue "-9999999.9" --maskvar "mask" --latname "XLAT" --lonname "XLONG"
 
 echo "Cleaning up!"
@@ -84,7 +84,7 @@ echo "Clean up some things before detect"
 rm -v -rf DN_files/
 mkdir -v -p DN_files
 
-echo "Detect candiate cyclones"
+echo "Detect candiate cyclones using filtered files"
 STRDETECT="--verbosity 0 --regional --timestride 2 --mergedist ${DCU_MERGEDIST} --searchbymin SLP --searchbythreshold >0 --outputcmd SLP,min,0;_VECMAG(U10,V10),max,2"
 $MPICOMMAND ${TEMPESTEXTREMESDIR}/bin/DetectNodes --in_data_list "a_output_files.txt" --out "DN_files/out" --latname "XLAT" --lonname "XLONG" ${STRDETECT}
 echo "... done detect"
@@ -93,7 +93,7 @@ cat DN_files/out* > wrfout_d01_DN.txt
 
 echo "Stitch candidate cyclones together"
 ${TEMPESTEXTREMESDIR}/bin/StitchNodes --in_fmt "lon,lat,slp,wind" --range ${SN_TRAJRANGE} --mintime ${SN_TRAJMINTIME} --maxgap ${SN_TRAJMAXGAP} --in wrfout_d01_DN.txt --out ${TRAJFILENAME} --threshold "wind,>=,${SN_MINWIND},${SN_MINLEN}"
-echo "... done stitch"
+echo "... done stitching"
 
 echo "Cleaning up!"
 rm a_output_files.txt
@@ -107,4 +107,3 @@ tottime=$(($endtime-$starttime))
 printf "${tottime},get_wrf_tracks,${UQSTR}\n" >> timing.txt
 
 exit
-
