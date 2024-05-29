@@ -213,7 +213,7 @@ def plot_histograms(processed_data, key, title, units, legend_names, save_figs):
     # Customize the plot
     plt.title(f'{title} distributions', fontsize=15)
     plt.xlabel(f'{title} ({units})', fontsize=14)
-    plt.ylabel('Density', fontsize=14)
+    plt.ylabel('Fraction', fontsize=14)
     plt.xticks(fontsize=14)
     plt.yticks(fontsize=14)
     plt.legend(fontsize=14)
@@ -256,7 +256,7 @@ def plot_histograms_with_control_deviation(processed_data, key, title, units, le
     # Customize the plot
     plt.title(f'Deviation from Hist.: {title} distributions', fontsize=15)
     plt.xlabel(f'Deviation in {title} ({units})', fontsize=14)
-    plt.ylabel('Density', fontsize=14)
+    plt.ylabel('Fraction', fontsize=14)
     plt.xticks(fontsize=14)
     plt.yticks(fontsize=14)
     plt.legend(fontsize=14)
@@ -483,7 +483,7 @@ else:
 # Keys for which to calculate and print statistics
 # TPZ answers
 #keys_for_statistics = ['xpres', 'xslp', 'xwind', 'xmax_wind10', 'xrmw', 'xmax_prect', 'xgt10_prect', 'xmax_tmq']
-keys_for_statistics = ['xpres','xwind','xrmw', 'xurmw', 'xr8', 'xike', 'xmax_prect', 'xgt10_prect', 'xmax_tmq', 'xslp', 'xmax_wind10', 'xmax_wind850', 'xgt8_wind10', 'xgt10_wind850', 'xvarpsl']
+keys_for_statistics = ['xpres', 'xwind', 'xrmw', 'xurmw', 'xr8', 'xike', 'xmax_prect', 'xgt10_prect', 'xmax_tmq', 'xslp', 'xmax_wind10', 'xmax_wind850', 'xgt8_wind10', 'xgt10_wind850', 'xvarpsl']
 
 # Calculate and print statistics for each list
 calculate_and_print_statistics(processed_data, keys_for_statistics, traj_files_legend)
@@ -492,7 +492,6 @@ calculate_and_print_statistics(processed_data, keys_for_statistics, traj_files_l
 
 pretty_labels = {
     'xpres': r'MSLP',
-    'xwind': r'$u_{10m,x}$',
     'xrmw': r'RMW',
     'xurmw': 'Wind at Radius of Max. Wind',
     'xr8': r'$r_{8}$',
@@ -569,11 +568,11 @@ plot_params = [
     ('xmax_wind10', 'Max. 10m wind speed', 'm/s'),
     ('xmax_wind850', 'Max. 850hPa wind speed', 'm/s'),
     ('xrmw', 'Radius of Maximum Wind', 'km'),
-    ('xgt10_prect', 'Area of precip. rates > 10mm/hr', '1000 km2'),
+    ('xgt10_prect', 'Area of precip. rates > 10mm/hr', '1000 km$^2$'),
     ('xr8', 'Radius of 8m/s wind', 'km'),
     ('xvarpsl', 'Magnitude of 6h dPSL', 'hPa/6hr'),
     ('xike', 'Integrated Kinetic Energy', 'TJ'),
-    ('xslp', 'Minimum sea level pressure', 'hPa')
+    ('xslp', 'Minimum Sea Level Pressure', 'hPa')
 ]
 
 for key, title, units in plot_params:
