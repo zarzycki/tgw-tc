@@ -144,7 +144,7 @@ snap_TMQ = ds_aux2['snap_TMQ']
 # Derived variables
 snap_WIND10 = np.sqrt(snap_U10**2 + snap_V10**2)
 snap_WIND850 = np.sqrt(snap_U850**2 + snap_V850**2)
-snap_PRECT = snap_PRECT * 3.6e6
+snap_PRECT = snap_PRECT * 3.6e6    # m/s to mm/hr
 
 # Close xarray datasets
 ds_aux.close()
@@ -206,7 +206,7 @@ write_cyclone_tracks(
     xmax_wind10=(xmax_wind10,'.6e'),
     xmax_wind850=(xmax_wind850,'.6e'),
     xmax_prect=(xmax_prect,'.6e'),
-    xgt10_prect=(xgt10_prect,'.6e'),
+    xgt10_prect=(xgt10_prect,'.0f'),
     xmax_tmq=(xmax_tmq,'.6e'),
     xgt8_wind10= (xgt8_wind10, '.0f'),
     xgt10_wind850= (xgt10_wind850, '.0f')
