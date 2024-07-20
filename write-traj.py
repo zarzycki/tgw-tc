@@ -3,6 +3,7 @@ import re
 import numpy as np
 import xarray as xr
 import operator
+from scipy.interpolate import RegularGridInterpolator
 
 sys.path.insert(0, './functions')
 from getTrajectories import *
@@ -175,6 +176,21 @@ derivIKE10 = derivIKE10.where(snap_WIND10 > thresh_ike_10, 0)
 derivIKE10_sum = 0.5 * derivIKE10.sum(dim=['y', 'x'])
 derivIKE10_sum = derivIKE10_sum * 1e-12
 
+### Add PHIS to the output
+snap_lat = ds_aux['snap_lat']
+snap_lon = ds_aux['snap_lon']
+ds_topo = xr.open_dataset('./obs-err/ERA5.topo.nc')
+phis = ds_topo['PHIS'].values
+phislats = ds_topo['lat'].values
+phislons = ds_topo['lon'].values
+interpolator = RegularGridInterpolator((phislats, phislons), phis, bounds_error=False, fill_value=np.nan)
+
+def interpolate_phis(lat, lon, interpolator):
+    points = np.array([lat, lon]).T
+    return interpolator(points)
+
+PHIS_values = interpolate_phis(snap_lat, snap_lon+360.0, interpolator)
+
 # Reshape any new arrays
 xslp = conform_to_reference_2d(xwind, min_SLP)
 xmax_prect = conform_to_reference_2d(xwind, max_PRECT)
@@ -187,6 +203,7 @@ xgt10_wind850 = conform_to_reference_2d(xwind, GT10_WIND850)
 xgt10_prect = conform_to_reference_2d(xwind, GT10_PRECT)
 xike850 = conform_to_reference_2d(xwind, derivIKE850_sum)
 xike10 = conform_to_reference_2d(xwind, derivIKE10_sum)
+xphis = conform_to_reference_2d(xwind, PHIS_values)
 
 # Write file
 write_cyclone_tracks(
@@ -209,5 +226,6 @@ write_cyclone_tracks(
     xgt10_prect=(xgt10_prect,'.0f'),
     xmax_tmq=(xmax_tmq,'.6e'),
     xgt8_wind10= (xgt8_wind10, '.0f'),
-    xgt10_wind850= (xgt10_wind850, '.0f')
+    xgt10_wind850= (xgt10_wind850, '.0f'),
+    xphis= (xphis, '.6e')
 )
