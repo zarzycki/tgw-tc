@@ -28,8 +28,16 @@ for var in "${error_vars[@]}"; do
   for track_file in "${model_files[@]}"; do
     this_error_file="${var}_errors_${track_file}"
     error_files+=($this_error_file)
-    ncl get-errors.ncl 'xfile="../trajs/'${reference_file}'"' 'yfile="../trajs/'${track_file}'"' 'outfile="./'$this_error_file'"' 'error_var="'${var}'"'
+
+    if [ "$track_file" == "traj.Historical_time_cleaned.txt_final" ] && [ "$var" == "wind" ]; then
+      plot_pw="True"
+    else
+      plot_pw="False"
+    fi
+
+    ncl get-errors.ncl 'xfile="../trajs/'${reference_file}'"' 'yfile="../trajs/'${track_file}'"' 'outfile="./'$this_error_file'"' 'error_var="'${var}'"' 'plot_pw='${plot_pw}
     $sed_cmd -i "1i $track_file" "$this_error_file"
+
   done
 
   ## Concatenate everything into a multi-column CSV
