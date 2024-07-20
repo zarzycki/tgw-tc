@@ -33,16 +33,16 @@ def process_trajectory_files(file_list, n_vars, header_str, is_unstructured, mas
         'xlon': [], 'xlat': [], 'xpres': [], 'xwind': [], 'xdpsl': [],
         'xurmw': [], 'xrmw': [], 'xr8': [], 'xike': [], 'xslp': [],
         'xmax_wind10': [], 'xmax_wind850': [], 'xmax_prect': [], 'xgt10_prect': [],
-        'xmax_tmq': [], 'xgt8_wind10': [], 'xgt10_wind850': [], 'xyear': [],
-        'xmonth': [], 'xday': [], 'xhour': []
+        'xmax_tmq': [], 'xgt8_wind10': [], 'xgt10_wind850': [], 'xphis': [],
+        'xyear': [], 'xmonth': [], 'xday': [], 'xhour': []
     }
 
     index_mapping = {
         'xlon': 2, 'xlat': 3, 'xpres': 4, 'xwind': 5, 'xdpsl': 6,
         'xurmw': 7, 'xrmw': 8, 'xr8': 9, 'xike': 10, 'xslp': 11,
         'xmax_wind10': 12, 'xmax_wind850': 13, 'xmax_prect': 14, 'xgt10_prect': 15,
-        'xmax_tmq': 16, 'xgt8_wind10': 17, 'xgt10_wind850': 18, 'xyear': 19,
-        'xmonth': 20, 'xday': 21, 'xhour': 22
+        'xmax_tmq': 16, 'xgt8_wind10': 17, 'xgt10_wind850': 18, 'xphis': 19,
+        'xyear': 20, 'xmonth': 21, 'xday': 22, 'xhour': 23
     }
 
     iterate = 0
@@ -108,7 +108,7 @@ def synchronize_and_diagnose_nans(processed_data, key):
         #else:
         #    print(f"Dataset {i+1} for '{key}' - No NaNs added.")
 
-def calculate_and_print_statistics(processed_data, list_names, case_names):
+def calculate_and_print_statistics(processed_data, list_names, case_names, filter_config='all'):
     results = []
 
     for list_name in list_names:
@@ -152,14 +152,19 @@ def calculate_and_print_statistics(processed_data, list_names, case_names):
             if i != 0:
                 print(f"    T-Statistic = {t_stat:.3f}, P-value = {p_val:.3f}")
 
+    stats_dir = "stats"
+    stats_subfolder = os.path.join(stats_dir, filter_config)
+    os.makedirs(stats_subfolder, exist_ok=True)
+
     # Write results to a CSV file
-    with open('statistics_output.csv', 'w', newline='') as csvfile:
+    csv_filename = os.path.join(stats_subfolder, 'statistics_output.csv')
+    with open(csv_filename, 'w', newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=results[0].keys())
         writer.writeheader()
         for data in results:
             writer.writerow(data)
 
-    print("Statistics written to statistics_output.csv")
+    print(f"Statistics written to {csv_filename}")
 
 def snapshot_percent_increase(processed_data, list_names):
     results = {}
@@ -192,7 +197,7 @@ def snapshot_percent_increase(processed_data, list_names):
 
     return results
 
-def plot_histograms(processed_data, key, title, units, legend_names, save_figs):
+def plot_histograms(processed_data, key, title, units, legend_names, save_figs, subfolder=''):
     data_list = processed_data[key]
 
     # Find the overall minimum and maximum values across all datasets
@@ -219,15 +224,13 @@ def plot_histograms(processed_data, key, title, units, legend_names, save_figs):
     plt.legend(fontsize=14)
 
     if save_figs:
-        figs_dir = "figs"
-        os.makedirs(figs_dir, exist_ok=True)  # Create the directory if it doesn't exist
-        filename = os.path.join(figs_dir, f"{key}_distribution.pdf")
+        filename = os.path.join(subfolder, f"{key}_distribution.pdf")
         plt.savefig(filename, bbox_inches='tight')
         plt.close()
     else:
         plt.show()
 
-def plot_histograms_with_control_deviation(processed_data, key, title, units, legend_names, save_figs):
+def plot_histograms_with_control_deviation(processed_data, key, title, units, legend_names, save_figs, subfolder=''):
     data_list = processed_data[key]
     control_data = data_list[0].flatten()  # Control dataset
 
@@ -269,14 +272,52 @@ def plot_histograms_with_control_deviation(processed_data, key, title, units, le
     plt.xlim(bin_edges[0], bin_edges[-1] - bin_width / REDUCTION_FACTOR)
 
     if save_figs:
-        figs_dir = "figs"
-        os.makedirs(figs_dir, exist_ok=True)  # Create the directory if it doesn't exist
-        filename = os.path.join(figs_dir, f"{key}_deviation_from_control.pdf")
+        filename = os.path.join(subfolder, f"{key}_deviation_from_control.pdf")
         plt.savefig(filename, bbox_inches='tight')
         plt.close()
     else:
         plt.show()
 
+def plot_scatter_points_with_phis(processed_data, traj_files_legend, save_figs, subfolder=''):
+    land_shp_fname = shpreader.natural_earth(resolution='110m', category='physical', name='land')
+    land_geom = list(shpreader.Reader(land_shp_fname).geometries())
+    land_geom_united = unary_union(land_geom)
+    land_geom_prepared = prep(land_geom_united)
+
+    panel_labels = ['a.', 'b.', 'c.', 'd.', 'e.']
+
+    for i, data in enumerate(processed_data['xlat']):
+        lats = processed_data['xlat'][i]
+        lons = processed_data['xlon'][i]
+        phis = processed_data['xphis'][i]
+
+        fig, ax = plt.subplots(figsize=(10, 6), subplot_kw={'projection': ccrs.PlateCarree()})
+        ax.set_extent([-130, -60, 20, 55], crs=ccrs.PlateCarree())
+
+        ax.coastlines()
+        ax.add_feature(cfeature.BORDERS)
+        ax.add_feature(cfeature.LAND)
+        ax.add_feature(cfeature.OCEAN)
+
+        gl = ax.gridlines(draw_labels=True, color='gray', alpha=0.5, linestyle='--')
+        gl.top_labels = False
+        gl.right_labels = False
+
+        scatter = ax.scatter(lons, lats, c=phis, cmap='jet', s=10, vmin=0, vmax=500, transform=ccrs.PlateCarree(), label='Surface Geopotential')
+
+        cbar = plt.colorbar(scatter, ax=ax, orientation='vertical', pad=0.02, aspect=50)
+        cbar.set_label('Surface Geopotential (m^2/s^2)', fontsize=14)
+
+        ax.set_title(f'Scatter Plot of Surface Geopotential - {traj_files_legend[i]}', fontsize=16)
+        ax.text(0.02, 0.96, panel_labels[i], transform=ax.transAxes, fontsize=20, fontweight='bold', va='top', ha='left', bbox=dict(facecolor='white', edgecolor='black', boxstyle='round,pad=0.2'))
+
+        if save_figs:
+            filename_safe = traj_files_legend[i].replace(' ', '_')
+            filename = os.path.join(subfolder, f"scatter_phis_{filename_safe}.pdf")
+            plt.savefig(filename, bbox_inches='tight')
+            plt.close()
+        else:
+            plt.show()
 
 #--------------------------------------------------------------------------------------------------------
 
@@ -300,6 +341,12 @@ save_figs=True
 
 mask_min_slp=float(get_arg(1))
 mask_max_slp=float(get_arg(2))
+land_or_ocean = get_arg(3)  # 'all', 'ocn', or 'lnd'
+
+if save_figs:
+    figs_dir = "figs"
+    subfolder = os.path.join(figs_dir, land_or_ocean)
+    os.makedirs(subfolder, exist_ok=True)
 
 bignumber=10e8
 if mask_min_slp < 0:
@@ -310,8 +357,6 @@ if mask_max_slp < 0:
     print("Setting mask_max_slp to: "+str(mask_max_slp))
 
 processed_data = process_trajectory_files(traj_files, nVars, headerStr, isUnstruc, mask_min_slp, mask_max_slp)
-
-###
 
 # A diagnostic to ensure the length of each loaded dataset is the same
 for key in processed_data:
@@ -331,6 +376,22 @@ synchronize_and_diagnose_nans(processed_data, 'xdpsl')
 synchronize_and_diagnose_nans(processed_data, 'xwind')
 synchronize_and_diagnose_nans(processed_data, 'xpres')
 synchronize_and_diagnose_nans(processed_data, 'xike')
+
+# Apply land or ocean filtering based on the 'land_or_ocean' argument
+if land_or_ocean == 'ocn':
+    for key in processed_data:
+        for i in range(len(processed_data[key])):
+            processed_data[key][i] = np.where(processed_data['xphis'][i] > 5.0, np.nan, processed_data[key][i])
+        synchronize_and_diagnose_nans(processed_data, key)
+
+if land_or_ocean == 'lnd':
+    for key in processed_data:
+        for i in range(len(processed_data[key])):
+            processed_data[key][i] = np.where(processed_data['xphis'][i] <= 5.0, np.nan, processed_data[key][i])
+        synchronize_and_diagnose_nans(processed_data, key)
+
+# Add scatter plots for all points color-coded by xphis
+plot_scatter_points_with_phis(processed_data, traj_files_legend, save_figs, subfolder=subfolder)
 
 # Add new variable for variation of psl (abs dpsl)
 processed_data['xvarpsl'] = [np.abs(data) for data in processed_data['xdpsl']]
@@ -430,10 +491,8 @@ for i, data in enumerate(processed_data['xdpsl']):
     rw_land = mlines.Line2D([], [], color='red', marker='o', markersize=5, markerfacecolor='none', linestyle='None', label='RW over land')
     ax.legend(handles=[ri_ocean, ri_land, rw_ocean, rw_land], fontsize=12, loc='upper right', framealpha=0.9)
 
-    figs_dir = "figs"
-    os.makedirs(figs_dir, exist_ok=True)
     filename_safe = traj_files_legend[i].replace(' ', '_')  # Replace spaces with underscores
-    filename = os.path.join(figs_dir, f"map_ri_events_{filename_safe}.pdf")
+    filename = os.path.join(subfolder, f"map_ri_events_{filename_safe}.pdf")
     plt.savefig(filename, bbox_inches='tight')
     plt.close()
 
@@ -470,9 +529,7 @@ plt.yticks(fontsize=16)
 plt.legend(fontsize=14)
 
 if save_figs:
-    figs_dir = "figs"
-    os.makedirs(figs_dir, exist_ok=True)  # Create the directory if it doesn't exist
-    filename = os.path.join(figs_dir, "rapid_deepening_collapsing.pdf")
+    filename = os.path.join(subfolder, "rapid_deepening_collapsing.pdf")
     plt.savefig(filename, bbox_inches='tight')
     plt.close()  # Close the plot to free up memory
 else:
@@ -486,7 +543,7 @@ else:
 keys_for_statistics = ['xpres', 'xwind', 'xrmw', 'xurmw', 'xr8', 'xike', 'xmax_prect', 'xgt10_prect', 'xmax_tmq', 'xslp', 'xmax_wind10', 'xmax_wind850', 'xgt8_wind10', 'xgt10_wind850', 'xvarpsl']
 
 # Calculate and print statistics for each list
-calculate_and_print_statistics(processed_data, keys_for_statistics, traj_files_legend)
+calculate_and_print_statistics(processed_data, keys_for_statistics, traj_files_legend, filter_config=land_or_ocean)
 
 ####
 
@@ -552,10 +609,8 @@ cbar.ax.tick_params(labelsize=18)
 
 # Save or display the plot based on save_figs
 if save_figs:
-    figs_dir = "figs"
-    os.makedirs(figs_dir, exist_ok=True)  # Create the directory if it doesn't exist
     plt.tight_layout()  # Adjust the padding between and around subplots.
-    plt.savefig(os.path.join(figs_dir, "heatmap.pdf"), bbox_inches='tight')  # Save the figure, ensuring nothing is cut off
+    plt.savefig(os.path.join(subfolder, "heatmap.pdf"), bbox_inches='tight')  # Save the figure, ensuring nothing is cut off
     plt.close()
 else:
     plt.show()
@@ -576,6 +631,5 @@ plot_params = [
 ]
 
 for key, title, units in plot_params:
-    plot_histograms(processed_data, key, title, units, traj_files_legend, save_figs)
-    plot_histograms_with_control_deviation(processed_data, key, title, units, traj_files_legend, save_figs)
-
+    plot_histograms(processed_data, key, title, units, traj_files_legend, save_figs, subfolder=subfolder)
+    plot_histograms_with_control_deviation(processed_data, key, title, units, traj_files_legend, save_figs, subfolder=subfolder)

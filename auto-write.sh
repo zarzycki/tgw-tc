@@ -4,8 +4,8 @@ rm -fv obs-err/*.csv
 rm -fv obs-err/*.png
 rm -fv trajs/final.*
 rm -fv trajs/*.pdf
-rm -fv figs/*.pdf
-rm -fv figs/*.png
+rm -frv figs/*
+rm -frv stats/*
 
 mkdir -p figs/
 
@@ -21,7 +21,10 @@ python write-traj.py hot_far
 python write-traj.py hot_near
 
 ### Analyze all TCs
-python analyze-dist.py -1 -1
+python analyze-dist.py -1 -1 all
+python analyze-dist.py -1 -1 ocn
+python analyze-dist.py -1 -1 lnd
+
 ### Analyze all TCs between 980 and 1000mb
 #python analyze-dist.py 980 1000
 
