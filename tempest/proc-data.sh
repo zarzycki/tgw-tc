@@ -15,7 +15,7 @@ conda activate e3sm_unified_1.8.1_nompi
 #rcp85hotter_2020_2059
 #rcp85hotter_2060_2099
 
-CONFIG="rcp85cooler_2020_2059"
+CONFIG=$1
 INDIR=/global/homes/c/czarzyck/TGW2/tgw-wrf-conus/${CONFIG}/three_hourly/
 OUTDIR=/pscratch/sd/c/czarzyck/temp/$CONFIG/
 VARS="SST,SSTSK,LH,HFX,U10,V10,OLR,PBLH,HGT,QFX,SFROFF"
@@ -27,6 +27,55 @@ export OUTDIR
 export VARS
 
 #---------------------------------------------------------------------------------
+
+## Delete "half done" files or anything that wasn't finished.
+
+NUMVARSEXPECTED=88
+export NUMVARSEXPECTED
+
+function ncvarlst { ncks --trd -m ${1} | grep -E ': type' | cut -f 1 -d ' ' | sed 's/://' | sort ; }
+
+export -f ncvarlst
+
+if ls "$OUTDIR"/*.nc4 1> /dev/null 2>&1; then
+  parallel '
+    NVARS=$(ncvarlst {} | wc -l)
+    echo "$NVARS in {}"
+    if [ "$NVARS" -lt "$NUMVARSEXPECTED" ]; then
+      rm -v {}
+    fi
+  ' ::: "$OUTDIR"/*.nc4
+else
+  echo "No files matching $OUTDIR/*.nc4"
+fi
+
+#---------------------------------------------------------------------------------
+
+case $CONFIG in
+  historical_1980_2019)
+    STARTYEAR="1979"
+    ;;
+  rcp85cooler_2020_2059)
+    STARTYEAR="2019"
+    ;;
+  rcp85cooler_2060_2099)
+    STARTYEAR="2059"
+    ;;
+  rcp85hotter_2020_2059)
+    STARTYEAR="2019"
+    ;;
+  rcp85hotter_2060_2099)
+    STARTYEAR="2059"
+    ;;
+  *)
+    echo "Unknown configuration: $CONFIG"
+    exit 1
+    ;;
+esac
+
+echo "STARTYEAR: $STARTYEAR"
+
+export STARTYEAR
 
 parallel_process() {
   f=$1
@@ -45,7 +94,7 @@ parallel_process() {
       ncks -A $ZNAME $NEWNAME
       rm -fv $ZNAME
       ncap2 -O -s 'XLAT=XLAT(0,:,:)' -s 'XLONG=XLONG(0,:,:)' $NEWNAME $NEWNAME
-      start_date="1979-01-01 00:00:00"
+      start_date="$STARTYEAR-01-01 00:00:00"
       ncatted -a units,XTIME,o,c,'minutes since '"$start_date" $NEWNAME
       ncatted -a calendar,XTIME,o,c,'standard' $NEWNAME
       ncrename -O -d Time,time -v XTIME,time $NEWNAME $NEWNAME
