@@ -172,6 +172,7 @@ SH2O_150@long_name="Soil liquid water at 150cm"
 ;WINT = wrf_user_interp_level(W,PRES,standard_levels,False)
 ;delete([/PRES,PRESH/])
 
+setfileoption("nc","Format","LargeFile")
 FILEOUT=OUTDIR+"/_z_"+BASENAME
 print("Writing: "+FILEOUT)
 system("/bin/rm -f "+FILEOUT)   ; remove any pre-existing file
