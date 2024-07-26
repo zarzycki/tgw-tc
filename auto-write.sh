@@ -28,6 +28,10 @@ python analyze-dist.py -1 -1 lnd
 ### Analyze all TCs between 980 and 1000mb
 #python analyze-dist.py 980 1000
 
+python csv-analysis.py all
+python csv-analysis.py ocn
+python csv-analysis.py lnd
+
 ### Get Fig. 1 full field examples
 python 2d_field.py --historical
 python 2d_field.py --future
