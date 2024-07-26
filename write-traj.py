@@ -131,16 +131,18 @@ snapshot_map = {
 
 ds_aux   = xr.open_dataset('./netcdf/composite_aux_CONUS_TGW_WRF_'+snapshot_map[experiment]+'.nc')
 ds_aux2  = xr.open_dataset('./netcdf/composite_aux2_CONUS_TGW_WRF_'+snapshot_map[experiment]+'.nc')
+ds_aux3  = xr.open_dataset('./netcdf/composite_aux3_CONUS_TGW_WRF_'+snapshot_map[experiment]+'.nc')
 ds_prect = xr.open_dataset('./netcdf/composite_prect_CONUS_TGW_WRF_'+snapshot_map[experiment]+'.nc')
 
 # Load variables
-snap_SLP = ds_aux['snap_SLP']
-snap_U10 = ds_aux['snap_U10']
-snap_V10 = ds_aux['snap_V10']
-snap_U850 = ds_aux2['snap_U850']
-snap_V850 = ds_aux2['snap_V850']
+snap_SLP   = ds_aux['snap_SLP']
+snap_U10   = ds_aux['snap_U10']
+snap_V10   = ds_aux['snap_V10']
+snap_U850  = ds_aux2['snap_U850']
+snap_V850  = ds_aux2['snap_V850']
+snap_SST   = ds_aux3['snap_SST']
 snap_PRECT = ds_prect['snap_PRECT']
-snap_TMQ = ds_aux2['snap_TMQ']
+snap_TMQ   = ds_aux2['snap_TMQ']
 
 # Derived variables
 snap_WIND10 = np.sqrt(snap_U10**2 + snap_V10**2)
@@ -157,6 +159,10 @@ max_WIND10 = snap_WIND10.max(dim=['y', 'x'])
 max_WIND850 = snap_WIND850.max(dim=['y', 'x'])
 max_PRECT  = snap_PRECT.max(dim=['y', 'x'])
 max_TMQ  = snap_TMQ.max(dim=['y', 'x'])
+
+SST_BOX_WIDTH=5.0
+avg_SST = snap_SST.sel(y=slice(-(SST_BOX_WIDTH/2), (SST_BOX_WIDTH/2)), x=slice(-(SST_BOX_WIDTH/2), (SST_BOX_WIDTH/2))).mean(dim=['y', 'x'])
+avg_SST = avg_SST.fillna(-999.9)
 
 LT1000_SLP = count_spatial_gridpoints(snap_SLP, '<', 1000)
 GT8_WIND10 = count_spatial_gridpoints(snap_WIND10, '>=', 8.0)
@@ -204,6 +210,7 @@ xgt10_prect = conform_to_reference_2d(xwind, GT10_PRECT)
 xike850 = conform_to_reference_2d(xwind, derivIKE850_sum)
 xike10 = conform_to_reference_2d(xwind, derivIKE10_sum)
 xphis = conform_to_reference_2d(xwind, PHIS_values)
+xsst = conform_to_reference_2d(xwind, avg_SST)
 
 # Write file
 write_cyclone_tracks(
@@ -227,5 +234,6 @@ write_cyclone_tracks(
     xmax_tmq=(xmax_tmq,'.6e'),
     xgt8_wind10= (xgt8_wind10, '.0f'),
     xgt10_wind850= (xgt10_wind850, '.0f'),
-    xphis= (xphis, '.6e')
+    xphis= (xphis, '.6e'),
+    xsst= (xsst, '.2f')
 )

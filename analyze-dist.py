@@ -33,7 +33,7 @@ def process_trajectory_files(file_list, n_vars, header_str, is_unstructured, mas
         'xlon': [], 'xlat': [], 'xpres': [], 'xwind': [], 'xdpsl': [],
         'xurmw': [], 'xrmw': [], 'xr8': [], 'xike': [], 'xslp': [],
         'xmax_wind10': [], 'xmax_wind850': [], 'xmax_prect': [], 'xgt10_prect': [],
-        'xmax_tmq': [], 'xgt8_wind10': [], 'xgt10_wind850': [], 'xphis': [],
+        'xmax_tmq': [], 'xgt8_wind10': [], 'xgt10_wind850': [], 'xphis': [], 'xsst': [],
         'xyear': [], 'xmonth': [], 'xday': [], 'xhour': []
     }
 
@@ -41,8 +41,8 @@ def process_trajectory_files(file_list, n_vars, header_str, is_unstructured, mas
         'xlon': 2, 'xlat': 3, 'xpres': 4, 'xwind': 5, 'xdpsl': 6,
         'xurmw': 7, 'xrmw': 8, 'xr8': 9, 'xike': 10, 'xslp': 11,
         'xmax_wind10': 12, 'xmax_wind850': 13, 'xmax_prect': 14, 'xgt10_prect': 15,
-        'xmax_tmq': 16, 'xgt8_wind10': 17, 'xgt10_wind850': 18, 'xphis': 19,
-        'xyear': 20, 'xmonth': 21, 'xday': 22, 'xhour': 23
+        'xmax_tmq': 16, 'xgt8_wind10': 17, 'xgt10_wind850': 18, 'xphis': 19, 'xsst': 20,
+        'xyear': 21, 'xmonth': 22, 'xday': 23, 'xhour': 24
     }
 
     iterate = 0
@@ -71,10 +71,27 @@ def apply_conversion_to_key(processed_data, key, conversion_factor):
     for i in range(num_files):
         processed_data[key][i] = processed_data[key][i] * conversion_factor
 
-def apply_nan_filter_to_keys(processed_data, key, threshold):
+def apply_nan_filter_to_keys(processed_data, key, threshold, condition):
+    """
+    Apply a NaN filter to the specified key in processed_data based on a threshold.
+
+    Parameters:
+        processed_data (dict): Dictionary containing numerical data arrays.
+        key (str): The key for which the NaN filter should be applied.
+        threshold (float): The numerical threshold for the filter.
+        condition (str): The condition for filtering ('>' or '<').
+
+    Returns:
+        None: The function modifies the processed_data in-place.
+    """
     num_files = len(processed_data[key])
     for i in range(num_files):
-        processed_data[key][i] = np.where(processed_data[key][i] > threshold, np.nan, processed_data[key][i])
+        if condition == '>':
+            processed_data[key][i] = np.where(processed_data[key][i] > threshold, np.nan, processed_data[key][i])
+        elif condition == '<':
+            processed_data[key][i] = np.where(processed_data[key][i] < threshold, np.nan, processed_data[key][i])
+        else:
+            raise ValueError("Condition must be '>' or '<'")
 
 def synchronize_and_diagnose_nans(processed_data, key):
     num_files = len(processed_data[key])
@@ -364,10 +381,11 @@ for key in processed_data:
     print(f"Lengths of datasets for key '{key}': {lengths}")
 
 # All values greater than 999/9 will be set to nans
-apply_nan_filter_to_keys(processed_data, 'xdpsl', 999)
-apply_nan_filter_to_keys(processed_data, 'xwind', 9999)
-apply_nan_filter_to_keys(processed_data, 'xpres', 9999)
-apply_nan_filter_to_keys(processed_data, 'xike', 1.0e+15)
+apply_nan_filter_to_keys(processed_data, 'xdpsl', 999, '>')
+apply_nan_filter_to_keys(processed_data, 'xwind', 9999, '>')
+apply_nan_filter_to_keys(processed_data, 'xpres', 9999, '>')
+apply_nan_filter_to_keys(processed_data, 'xike', 1.0e+15, '>')
+apply_nan_filter_to_keys(processed_data, 'xsst', -999, '<')
 
 # If any timestep has *any* nan across the datasets, set all of the datasets to nan
 # This happens with wind in the TE data because TE may "catch" the missing data at the edge of the domain
@@ -376,6 +394,7 @@ synchronize_and_diagnose_nans(processed_data, 'xdpsl')
 synchronize_and_diagnose_nans(processed_data, 'xwind')
 synchronize_and_diagnose_nans(processed_data, 'xpres')
 synchronize_and_diagnose_nans(processed_data, 'xike')
+synchronize_and_diagnose_nans(processed_data, 'xsst')
 
 # Apply land or ocean filtering based on the 'land_or_ocean' argument
 if land_or_ocean == 'ocn':
@@ -418,8 +437,8 @@ apply_conversion_to_key(processed_data, 'xgt8_wind10', 123.21/1000) # 1000 km2
 
 n_rapid_deepening = []
 n_rapid_collapsing = []
-thresh_rapid_deepening = -10
-thresh_rapid_collapsing = 10
+thresh_rapid_deepening = -7.5
+thresh_rapid_collapsing = 7.5
 deepening_lat_lon = []
 collapsing_lat_lon = []
 
@@ -540,7 +559,7 @@ else:
 # Keys for which to calculate and print statistics
 # TPZ answers
 #keys_for_statistics = ['xpres', 'xslp', 'xwind', 'xmax_wind10', 'xrmw', 'xmax_prect', 'xgt10_prect', 'xmax_tmq']
-keys_for_statistics = ['xpres', 'xwind', 'xrmw', 'xurmw', 'xr8', 'xike', 'xmax_prect', 'xgt10_prect', 'xmax_tmq', 'xslp', 'xmax_wind10', 'xmax_wind850', 'xgt8_wind10', 'xgt10_wind850', 'xvarpsl']
+keys_for_statistics = ['xpres', 'xwind', 'xrmw', 'xurmw', 'xr8', 'xike', 'xmax_prect', 'xgt10_prect', 'xmax_tmq', 'xslp', 'xmax_wind10', 'xmax_wind850', 'xgt8_wind10', 'xgt10_wind850', 'xvarpsl', 'xsst']
 
 # Calculate and print statistics for each list
 calculate_and_print_statistics(processed_data, keys_for_statistics, traj_files_legend, filter_config=land_or_ocean)
@@ -627,7 +646,8 @@ plot_params = [
     ('xr8', 'Radius of 8m/s wind', 'km'),
     ('xvarpsl', 'Magnitude of 6h dPSL', 'hPa/6hr'),
     ('xike', 'Integrated Kinetic Energy', 'TJ'),
-    ('xslp', 'Minimum Sea Level Pressure', 'hPa')
+    ('xslp', 'Minimum Sea Level Pressure', 'hPa'),
+    ('xsst', 'Sea Surface Temperature Under TC', 'K')
 ]
 
 for key, title, units in plot_params:
