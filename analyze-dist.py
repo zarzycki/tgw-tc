@@ -451,8 +451,13 @@ land_geom = list(shpreader.Reader(land_shp_fname).geometries())
 land_geom_united = unary_union(land_geom)
 land_geom_prepared = prep(land_geom_united)
 
+land_ri_counts = []  # List to store RI over land
+ocean_ri_counts = []  # List to store RI over ocean
+land_rw_counts = []  # List to store RW over land
+ocean_rw_counts = []  # List to store RW over ocean
+
 for i, data in enumerate(processed_data['xdpsl']):
-    # Find the indices where the pres either goes up/down by threshold
+    # Find the indices where the pressure either goes up/down by threshold
     deepening_indices = np.where(data <= thresh_rapid_deepening)
     collapsing_indices = np.where(data >= thresh_rapid_collapsing)
 
@@ -465,6 +470,27 @@ for i, data in enumerate(processed_data['xdpsl']):
     # Extract latitude and longitude points
     deepening_lat_lon.append(list(zip(processed_data['xlat'][i][deepening_indices], processed_data['xlon'][i][deepening_indices])))
     collapsing_lat_lon.append(list(zip(processed_data['xlat'][i][collapsing_indices], processed_data['xlon'][i][collapsing_indices])))
+
+    # Extract year, month, day, and hour for diagnostics using indices
+    deepening_dates = list(zip(
+        processed_data['xyear'][i][deepening_indices],
+        processed_data['xmonth'][i][deepening_indices],
+        processed_data['xday'][i][deepening_indices],
+        processed_data['xhour'][i][deepening_indices]
+    ))
+
+    collapsing_dates = list(zip(
+        processed_data['xyear'][i][collapsing_indices],
+        processed_data['xmonth'][i][collapsing_indices],
+        processed_data['xday'][i][collapsing_indices],
+        processed_data['xhour'][i][collapsing_indices]
+    ))
+
+    # Initialize counters for RI and RW over land and ocean
+    land_ri_count = 0
+    ocean_ri_count = 0
+    land_rw_count = 0
+    ocean_rw_count = 0
 
     fig, ax = plt.subplots(figsize=(10, 6), subplot_kw={'projection': ccrs.PlateCarree()})
     ax.set_extent([-130, -60, 20, 55], crs=ccrs.PlateCarree())  # Zoom in on CONUS
@@ -481,21 +507,44 @@ for i, data in enumerate(processed_data['xdpsl']):
 
     # Plot rapid intensification points
     if deepening_lat_lon[i]:
-        for lat, lon in deepening_lat_lon[i]:
+        for index, (lat, lon) in enumerate(deepening_lat_lon[i]):
             point = Point(lon, lat)
+
+            # Format the date and time as MM/DD/YYYY and HH:00
+            year, month, day, hour = deepening_dates[index]
+            date_str = f"{int(month):02}/{int(day):02}/{int(year)} {int(hour):02}:00"
+
             if land_geom_prepared.contains(point):
                 ax.plot(lon, lat, 'bo', markerfacecolor='none', markersize=5, label='RI over land')
+                land_ri_count += 1
+                print(f"RI over land at lat: {lat:.6f}, lon: {lon:.6f}, on {date_str}")
             else:
                 ax.plot(lon, lat, 'bo', markersize=5, label='RI over ocean')
+                ocean_ri_count += 1
+                print(f"RI over ocean at lat: {lat:.6f}, lon: {lon:.6f}, on {date_str}")
 
     # Plot rapid weakening points
     if collapsing_lat_lon[i]:
-        for lat, lon in collapsing_lat_lon[i]:
+        for index, (lat, lon) in enumerate(collapsing_lat_lon[i]):
             point = Point(lon, lat)
+
+            # Format the date and time as MM/DD/YYYY and HH:00
+            year, month, day, hour = collapsing_dates[index]
+            date_str = f"{int(month):02}/{int(day):02}/{int(year)} {int(hour):02}:00"
+
             if land_geom_prepared.contains(point):
                 ax.plot(lon, lat, 'ro', markerfacecolor='none', markersize=5, label='RW over land')
+                land_rw_count += 1
+                print(f"RW over land at lat: {lat:.6f}, lon: {lon:.6f}, on {date_str}")
             else:
                 ax.plot(lon, lat, 'ro', markersize=5, label='RW over ocean')
+                ocean_rw_count += 1
+                print(f"RW over ocean at lat: {lat:.6f}, lon: {lon:.6f}, on {date_str}")
+
+    land_ri_counts.append(land_ri_count)
+    ocean_ri_counts.append(ocean_ri_count)
+    land_rw_counts.append(land_rw_count)
+    ocean_rw_counts.append(ocean_rw_count)
 
     ax.set_title(f'Rapid Intensification and Weakening Occurrences - {traj_files_legend[i]}', fontsize=16)
 
@@ -529,20 +578,39 @@ print("Latitude and longitude points for rapid collapsing:")
 for lat_lon in collapsing_lat_lon:
     print(lat_lon)
 
+print("Land RI Counts:", land_ri_counts)
+print("Ocean RI Counts:", ocean_ri_counts)
+print("Land RW Counts:", land_rw_counts)
+print("Ocean RW Counts:", ocean_rw_counts)
+
+perc_land_ri = [(100 * land / (land + ocean)) if (land + ocean) != 0 else 0 for land, ocean in zip(land_ri_counts, ocean_ri_counts)]
+perc_ocean_ri = [(100 * ocean / (land + ocean)) if (land + ocean) != 0 else 0 for land, ocean in zip(land_ri_counts, ocean_ri_counts)]
+perc_land_rw = [(100 * land / (land + ocean)) if (land + ocean) != 0 else 0 for land, ocean in zip(land_rw_counts, ocean_rw_counts)]
+perc_ocean_rw = [(100 * ocean / (land + ocean)) if (land + ocean) != 0 else 0 for land, ocean in zip(land_rw_counts, ocean_rw_counts)]
+print("Percentage of RI over land:", [f"{perc:.1f}" for perc in perc_land_ri])
+print("Percentage of RI over ocean:", [f"{perc:.1f}" for perc in perc_ocean_ri])
+print("Percentage of RW over land:", [f"{perc:.1f}" for perc in perc_land_rw])
+print("Percentage of RW over ocean:", [f"{perc:.1f}" for perc in perc_ocean_rw])
+
 ## Plot rapid deepening + collapsing
 
-index = np.arange(num_files) # Creating an index for each pair
+index = np.arange(num_files)  # Creating an index for each pair
 
 bar_width = 0.35
 
 plt.figure(figsize=(10, 6))
-bar1 = plt.bar(index, n_rapid_deepening, bar_width, color='b', label='Rapid Intensification')
-bar2 = plt.bar(index + bar_width, n_rapid_collapsing, bar_width, color='r', label='Rapid Weakening')
 
-#plt.xlabel('Model simulation',fontsize=16)
-plt.ylabel('Number of occurances',fontsize=16)
-plt.title('Rapid Intensification and Weakening Occurances',fontsize=16)
-plt.xticks(index + bar_width / 2, traj_files_legend,fontsize=16)
+# Plotting stacked bars for RI
+plt.bar(index, land_ri_counts, bar_width, color='dodgerblue', label='RI (Land)')
+plt.bar(index, ocean_ri_counts, bar_width, bottom=land_ri_counts, color='blue', label='RI (Ocean)')
+
+# Plotting stacked bars for RW
+plt.bar(index + bar_width, land_rw_counts, bar_width, color='lightcoral', label='RW (Land)')
+plt.bar(index + bar_width, ocean_rw_counts, bar_width, bottom=land_rw_counts, color='red', label='RW (Ocean)')
+
+plt.ylabel('Number of occurrences', fontsize=16)
+plt.title('Rapid Intensification (RI) and Weakening (RW) Occurrences', fontsize=16)
+plt.xticks(index + bar_width / 2, traj_files_legend, fontsize=16)
 plt.yticks(fontsize=16)
 
 plt.legend(fontsize=14)
@@ -553,6 +621,7 @@ if save_figs:
     plt.close()  # Close the plot to free up memory
 else:
     plt.show()
+
 
 ##
 
