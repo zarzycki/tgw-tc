@@ -12,4 +12,5 @@ dependencies:
   - cartopy=0.21
   - shapely=2.0
   - seaborn=0.13
+  - nc-time-axis=1.4.1
 #  - ncl=6.6.2
