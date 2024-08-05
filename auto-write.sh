@@ -32,6 +32,10 @@ python csv-analysis.py all
 python csv-analysis.py ocn
 python csv-analysis.py lnd
 
+python gen-table.py all
+python gen-table.py ocn
+python gen-table.py lnd
+
 ### Get Fig. 1 full field examples
 python 2d_field.py --historical
 python 2d_field.py --future
