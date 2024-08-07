@@ -27,7 +27,7 @@ def decode_time_if_needed(timeseries, start_date='2003-09-03'):
 first_file_date='2003-09-03'
 target_lat = 28.1
 target_lon = -71.5
-folder_path = '../netcdf/SST/2003_isabel/'
+folder_path = '../netcdf/'
 
 #first_file_date='2005-08-06'
 #target_lat = 27.2
@@ -36,11 +36,11 @@ folder_path = '../netcdf/SST/2003_isabel/'
 
 # Define the file patterns for the datasets
 file_patterns = [
-    f'{folder_path}/cat_historical_1980_2019.nc',
-    f'{folder_path}/cat_rcp85cooler_2020_2059.nc',
-    f'{folder_path}/cat_rcp85hotter_2020_2059.nc',
-    f'{folder_path}/cat_rcp85cooler_2060_2099.nc',
-    f'{folder_path}/cat_rcp85hotter_2060_2099.nc'
+    f'{folder_path}/sst_2003_isabel_historical_1980_2019.nc',
+    f'{folder_path}/sst_2003_isabel_rcp85cooler_2020_2059.nc',
+    f'{folder_path}/sst_2003_isabel_rcp85hotter_2020_2059.nc',
+    f'{folder_path}/sst_2003_isabel_rcp85cooler_2060_2099.nc',
+    f'{folder_path}/sst_2003_isabel_rcp85hotter_2060_2099.nc'
 ]
 
 # Load and concatenate datasets

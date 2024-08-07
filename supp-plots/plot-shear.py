@@ -19,13 +19,13 @@ title_font_size = 22  # Adjust the font size for the plot titles
 colorbar_font_size = 18  # Adjust the font size for the colorbar labels
 
 # Define the file patterns for the datasets
-folder_path = '../netcdf/shear/19830903/'  # Adjust the path as needed
+folder_path = '../netcdf/'  # Adjust the path as needed
 file_patterns = [
-    f'{folder_path}/cat_historical_1980_2019.nc',
-    f'{folder_path}/cat_rcp85cooler_2020_2059.nc',
-    f'{folder_path}/cat_rcp85hotter_2020_2059.nc',
-    f'{folder_path}/cat_rcp85cooler_2060_2099.nc',
-    f'{folder_path}/cat_rcp85hotter_2060_2099.nc'
+    f'{folder_path}/shear_19830903_historical_1980_2019.nc',
+    f'{folder_path}/shear_19830903_rcp85cooler_2020_2059.nc',
+    f'{folder_path}/shear_19830903_rcp85hotter_2020_2059.nc',
+    f'{folder_path}/shear_19830903_rcp85cooler_2060_2099.nc',
+    f'{folder_path}/shear_19830903_rcp85hotter_2060_2099.nc'
 ]
 
 # Labels for each dataset
