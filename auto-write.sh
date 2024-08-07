@@ -6,13 +6,12 @@ rm -fv trajs/final.*
 rm -fv trajs/*.pdf
 rm -frv figs/*
 rm -frv stats/*
+rm -frv supp-plots/*.png
+rm -frv supp-plots/*.pdf
 
 mkdir -p figs/
 
-# Check if ncl exists
-if ! type ncl &> /dev/null ; then
-  echo "ERROR: ncl does not exist. Make sure ncl is in your path" ; exit 1
-fi
+set -e
 
 python write-traj.py Historical
 python write-traj.py cold_far
@@ -47,8 +46,18 @@ cd obs-err
 ( bash batch-errors.sh )
 cd ..
 
+### Supp images
+cd supp-plots
+python plot-shear.py
+python plot-sst.py
+cd ..
+
 cd trajs
-ncl plot_traj.ncl
+if ! type ncl &> /dev/null ; then
+  echo "ERROR: ncl does not exist. Make sure ncl is in your path to plot_traj" ; exit 1
+else
+  ncl plot_traj.ncl
+fi
 cd ..
 
 echo "DONE"

@@ -11,6 +11,28 @@ if len(sys.argv) < 2:
 
 filename = sys.argv[1]  # Get the filename from command line arguments
 
+# Determine the plot title and axis labels based on the filename
+if "psl_errors_combined" in filename:
+    x_label = 'Pressure Bias (hPa)'
+    plot_title = 'Pressure Bias Distribution in Historical'
+    plot_color = 'red'
+    filename_suffix = 'psl'
+elif "track_errors_combined" in filename:
+    x_label = 'Track Error (km)'
+    plot_title = 'Track Error Distribution in Historical'
+    plot_color = 'black'
+    filename_suffix = 'track'
+elif "wind_errors_combined" in filename:
+    x_label = 'Wind Speed Bias (m/s)'
+    plot_title = 'Wind Speed Bias Distribution in Historical'
+    plot_color = 'blue'
+    filename_suffix = 'wind'
+else:
+    x_label = 'Value'
+    plot_title = 'Probability Density Function'
+    plot_color = 'green'
+    filename_suffix = 'XXX'
+
 data = pd.read_csv(filename)
 
 # Replace values <= -9000 with NaN
@@ -61,4 +83,24 @@ plt.title('Probability Density Function of Each Variable')
 plt.legend(title='Variable')
 
 # Save the figure
-plt.savefig('density_plot.png', dpi=300, bbox_inches='tight')
+plt.savefig(f'density_bias_{filename_suffix}_ALL.png', dpi=300, bbox_inches='tight')
+
+### NEW
+
+# Plotting the density plot for only the first column
+plt.figure(figsize=(10, 6))
+
+# Extract the first column's name
+first_column_name = data.columns[0]
+
+# Plot the density plot for the first column without a legend
+sns.kdeplot(data[first_column_name], bw_adjust=0.9, fill=True, common_norm=False, alpha=0.2, color=plot_color)
+
+# Adding labels and title
+plt.xlabel(x_label)
+plt.ylabel('Density')
+plt.title(plot_title)
+
+# Save the figure without a legend
+plt.savefig(f'density_bias_{filename_suffix}_hist.png', dpi=300, bbox_inches='tight')
+plt.close()

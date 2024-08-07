@@ -58,11 +58,8 @@ for var in "${error_vars[@]}"; do
 done
 
 python analyze-track-errors.py "track_errors_combined.csv"
-mv -v density_plot.png plot_track_errors.png
 mv -v output_statistics.csv stats_track_err.csv
 python analyze-track-errors.py "psl_errors_combined.csv"
-mv -v density_plot.png plot_psl_errors.png
 mv -v output_statistics.csv stats_psl_err.csv
 python analyze-track-errors.py "wind_errors_combined.csv"
-mv -v density_plot.png plot_wind_errors.png
 mv -v output_statistics.csv stats_wind_err.csv
