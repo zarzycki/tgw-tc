@@ -1,7 +1,9 @@
 ## Cleanup?
+rm -frv functions/__pycache__
 rm -fv *.csv
 rm -fv obs-err/*.csv
 rm -fv obs-err/*.png
+rm -fv obs-err/*.pdf
 rm -fv trajs/final.*
 rm -fv trajs/*.pdf
 rm -frv figs/*
@@ -42,9 +44,13 @@ python 2d_field.py --future
 ### Get Fig. 1 snap comparison examples
 python snap_comparison.py
 
-cd obs-err
-( bash batch-errors.sh )
-cd ..
+if ! type ncl &> /dev/null ; then
+  echo "WARNING/ERROR?: ncl does not exist. Make sure ncl is in your path to plot_traj. Skipping batch-errors"
+else
+  cd obs-err
+  ( bash batch-errors.sh )
+  cd ..
+fi
 
 ### Supp images
 cd supp-plots
@@ -52,12 +58,12 @@ python plot-shear.py
 python plot-sst.py
 cd ..
 
-cd trajs
 if ! type ncl &> /dev/null ; then
-  echo "ERROR: ncl does not exist. Make sure ncl is in your path to plot_traj" ; exit 1
+  echo "WARNING/ERROR?: ncl does not exist. Make sure ncl is in your path to plot_traj. Skipping plot_traj"
 else
+  cd trajs
   ncl plot_traj.ncl
+  cd ..
 fi
-cd ..
 
 echo "DONE"
