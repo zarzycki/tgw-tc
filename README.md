@@ -1,19 +1,21 @@
 # tgw-tc
 
-Assuming you have checked out this repository, to reproduce results from Zarzycki et al., 2024 run...
+To reproduce results from Zarzycki et al., 2024 ("Changes in four decades of near-CONUS tropical cyclones in an ensemble of 12km thermodynamic global warming simulations"), follow these steps:
+
+1. Create the Python environment with the required dependencies using either `mamba` or `conda`:
 
 ```
 mamba env create -f tgw-tc.yml
 ```
 
-to install a Python environment containing the required depencies. Use `conda` if you'd like.
+If you prefer, you can use `conda` instead of `mamba`.
 
-NOTE: If you have NCL already installed on your machine, comment the `ncl` line in `tgw-tc.yml`. Note that NCL has questionable support on M1/M2/MX Macbooks. NCL is only required for a few plots and error statistics, the code is designed to not fail if it is not installed.
+**Note:** If you already have NCL installed on your machine, comment out the `ncl` line in `tgw-tc.yml`. Be aware that NCL has questionable support on M1/M2/MX Macbooks. NCL is only required for a few plots and error statistics, and the code is designed to work without it.
 
-You should also place the NetCDF files from doi:10.5281/zenodo.11453972 in a subfolder named "netcdf".
+2. Place the NetCDF files from [doi:10.5281/zenodo.11453972](https://doi.org/10.5281/zenodo.11453972) in a subfolder of this codebase named `netcdf`.
 
-Then run:
+3. Run the following script:
 
 ```
-bash auto-write.sh 
+bash auto-write.sh
 ```
